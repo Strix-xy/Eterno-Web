@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}ETERNO{% endblock %}</title>
+    <style>
+      /* Import Google Fonts for elegant typography */
+      @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500&display=swap");
+
+      /* Reset default browser styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* CSS Variables for consistent theming */
+      :root {
+        --bg-black: #0a0a0a;
+        --bg-dark: #121212;
+        --text-white: #ffffff;
+        --text-gray: #a0a0a0;
+        --accent-glow: #ffffff;
+        --border-color: #2a2a2a;
+      }
+
+      /* Main body styling */
+      body {
+        font-family: "Montserrat", sans-serif;
+        background-color: var(--bg-black);
+        color: var(--text-white);
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* Subtle smoke effect overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(255, 255, 255, 0.03) 0%,
+          transparent 50%
+        );
+        pointer-events: none;
+        z-index: 1;
+        animation: smokeFloat 20s infinite alternate;
+      }
+
+      @keyframes smokeFloat {
+        0% {
+          transform: translate(0, 0);
+        }
+        100% {
+          transform: translate(30px, -30px);
+        }
+      }
+
+      /* Fixed navigation bar */
+      nav {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        transition: all 0.3s ease;
+      }
+
+      nav:hover {
+        border-bottom-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Logo section with brand name and icon */
+      .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        filter: brightness(0) invert(1);
+        transition: all 0.3s ease;
+      }
+
+      .logo-icon:hover {
+        filter: brightness(0) invert(1)
+          drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+      }
+
+      .logo {
+        font-family: "Cinzel", serif;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 4px;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        transition: all 0.3s ease;
+      }
+
+      .logo:hover {
+        text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+      }
+
+      /* Navigation links */
+      .nav-links {
+        display: flex;
+        gap: 3rem;
+        list-style: none;
+        align-items: center;
+      }
+
+      .nav-links a {
+        color: var(--text-gray);
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      /* Animated underline on hover */
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: var(--text-white);
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+      }
+
+      .nav-links a:hover {
+        color: var(--text-white);
+      }
+
+      .nav-links a:hover::after {
+        width: 100%;
+      }
+
+      /* Main content area */
+      main {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        padding-top: 100px;
+      }
+
+      /* Button styling with hover animation */
+      .btn {
+        padding: 1rem 2.5rem;
+        background: transparent;
+        color: var(--text-white);
+        border: 1px solid var(--text-white);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        font-family: "Montserrat", sans-serif;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      /* Button fill animation */
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--text-white);
+        transition: left 0.3s ease;
+        z-index: -1;
+      }
+
+      .btn:hover {
+        color: var(--bg-black);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      }
+
+      .btn:hover::before {
+        left: 0;
+      }
+
+      /* Form group styling */
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+        color: var(--text-gray);
+      }
+
+      /* Form inputs styling */
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-white);
+        font-family: "Montserrat", sans-serif;
+        transition: all 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--text-white);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+      }
+
+      /* Card component styling */
+      .card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        transition: all 0.3s ease;
+      }
+
+      .card:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        transform: translateY(-5px);
+      }
+
+      /* Floating cart button */
+      .floating-cart {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid var(--text-white);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 999;
+        text-decoration: none;
+        color: var(--text-white);
+        font-size: 1.5rem;
+      }
+
+      .floating-cart:hover {
+        background: var(--text-white);
+        color: var(--bg-black);
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+        transform: scale(1.1);
+      }
+
+      /* Cart item count badge */
+      .cart-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ff4444;
+        color: white;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: bold;
+      }
+
+      /* Footer styling */
+      footer {
+        background: var(--bg-dark);
+        border-top: 1px solid var(--border-color);
+        padding: 3rem 5%;
+        text-align: center;
+        margin-top: 5rem;
+      }
+
+      footer p {
+        color: var(--text-gray);
+        letter-spacing: 2px;
+        font-size: 0.85rem;
+      }
+
+      /* Mobile responsive styles */
+      @media (max-width: 768px) {
+        nav {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .nav-links {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        main {
+          padding-top: 200px;
+        }
+
+        .floating-cart {
+          bottom: 1rem;
+          right: 1rem;
+          width: 50px;
+          height: 50px;
+        }
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-black);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-gray);
+      }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <!-- Main Navigation Bar -->
+    <nav>
+      <div class="logo-section">
+        <!-- Brand logo image -->
+        <img
+          src="https://img.icons8.com/ios-filled/50/ffffff/infinity.png"
+          alt="Eterno Logo"
+          class="logo-icon"
+        />
+        <div class="logo">ETERNO</div>
+      </div>
+
+      <!-- Dynamic navigation based on user role -->
+      <ul class="nav-links">
+        {% if session.role == 'admin' %}
+        <!-- Admin-specific links -->
+        <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li><a href="{{ url_for('admin.pos') }}">POS</a></li>
+        <li><a href="{{ url_for('admin.inventory') }}">Inventory</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+        {% elif session.user_id %}
+        <!-- Customer links when logged in -->
+        <li><a href="{{ url_for('customer.shop') }}">Shop</a></li>
+        <li><a href="{{ url_for('customer.about') }}">About</a></li>
+        <li><a href="{{ url_for('customer.cart') }}">Cart</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+        {% else %}
+        <!-- Guest links -->
+        <li><a href="{{ url_for('main.index') }}">Home</a></li>
+        <li><a href="{{ url_for('customer.about') }}">About</a></li>
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+
+    <!-- Main content area -->
+    <main>{% block content %}{% endblock %}</main>
+
+    <!-- Floating cart button for customers -->
+    {% if session.user_id and session.role != 'admin' %}
+    <a
+      href="{{ url_for('customer.cart') }}"
+      class="floating-cart"
+      title="View Cart"
+    >
+      🛒
+      <span class="cart-count" id="cartCount">0</span>
+    </a>
+    {% endif %}
+
+    <!-- Footer section -->
+    <footer>
+      <p>© 2024 ETERNO - TIMELESS FASHION</p>
+    </footer>
+
+    <!-- Cart count updater script -->
+    <script>
+      // Update cart count on page load
+      if (document.getElementById("cartCount")) {
+        updateCartCount();
+      }
+
+      // Function to fetch and display cart item count
+      async function updateCartCount() {
+        try {
+          const response = await fetch("/cart/count");
+          const data = await response.json();
+          const countEl = document.getElementById("cartCount");
+          if (countEl && data.count > 0) {
+            countEl.textContent = data.count;
+            countEl.style.display = "flex";
+          } else if (countEl) {
+            countEl.style.display = "none";
+          }
+        } catch (error) {
+          console.log("Could not fetch cart count");
+        }
+      }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
