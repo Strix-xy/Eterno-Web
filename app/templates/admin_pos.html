@@ -260,9 +260,64 @@ block extra_css %}
 
     <div class="total-section">
       <div class="total-row">
+        <span>Subtotal:</span>
+        <span id="subtotalAmount">₱0.00</span>
+      </div>
+      <div class="total-row" id="discountRow" style="display: none">
+        <span>Discount:</span>
+        <span id="discountAmount" style="color: #4caf50">-₱0.00</span>
+      </div>
+      <div
+        class="total-row"
+        style="
+          border-top: 1px solid var(--border-color);
+          padding-top: 1rem;
+          margin-top: 1rem;
+        "
+      >
         <span>TOTAL:</span>
         <span class="total-amount" id="totalAmount">₱0.00</span>
       </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem">
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
+        <button
+          class="btn"
+          style="flex: 1; padding: 0.8rem"
+          onclick="applyDiscount('pwd')"
+        >
+          PWD (20%)
+        </button>
+        <button
+          class="btn"
+          style="flex: 1; padding: 0.8rem"
+          onclick="applyDiscount('senior')"
+        >
+          Senior (20%)
+        </button>
+      </div>
+      <button
+        class="btn"
+        style="width: 100%; padding: 0.8rem"
+        onclick="applyDiscount('voucher')"
+      >
+        Voucher (₱100)
+      </button>
+      <button
+        class="btn"
+        style="
+          width: 100%;
+          padding: 0.8rem;
+          margin-top: 0.5rem;
+          background: rgba(255, 68, 68, 0.1);
+          border-color: #ff4444;
+          color: #ff4444;
+        "
+        onclick="removeDiscount()"
+      >
+        Remove Discount
+      </button>
     </div>
 
     <div class="checkout-actions">
@@ -276,6 +331,7 @@ block extra_css %}
 {% endblock %} {% block extra_js %}
 <script>
   let cart = [];
+  let currentDiscount = { type: null, amount: 0 };
 
   function addToCart(productId, productName, productPrice, stock) {
     const existingItem = cart.find((item) => item.product_id === productId);
@@ -330,19 +386,25 @@ block extra_css %}
   function renderCart() {
     const cartItemsDiv = document.getElementById("cartItems");
     const totalAmountSpan = document.getElementById("totalAmount");
+    const subtotalAmountSpan = document.getElementById("subtotalAmount");
+    const discountRow = document.getElementById("discountRow");
+    const discountAmountSpan = document.getElementById("discountAmount");
 
     if (cart.length === 0) {
       cartItemsDiv.innerHTML = '<div class="empty-cart">No items added</div>';
       totalAmountSpan.textContent = "₱0.00";
+      subtotalAmountSpan.textContent = "₱0.00";
+      discountRow.style.display = "none";
+      currentDiscount = { type: null, amount: 0 };
       return;
     }
 
     let html = "";
-    let total = 0;
+    let subtotal = 0;
 
     cart.forEach((item) => {
       const itemTotal = item.price * item.quantity;
-      total += itemTotal;
+      subtotal += itemTotal;
 
       html += `
                   <div class="cart-item">
@@ -374,7 +436,42 @@ block extra_css %}
     });
 
     cartItemsDiv.innerHTML = html;
+    subtotalAmountSpan.textContent = `₱${subtotal.toFixed(2)}`;
+
+    // Apply discount
+    let total = subtotal - currentDiscount.amount;
+    if (total < 0) total = 0;
+
+    if (currentDiscount.amount > 0) {
+      discountRow.style.display = "flex";
+      discountAmountSpan.textContent = `-₱${currentDiscount.amount.toFixed(2)}`;
+    } else {
+      discountRow.style.display = "none";
+    }
+
     totalAmountSpan.textContent = `₱${total.toFixed(2)}`;
+  }
+
+  function applyDiscount(type) {
+    const subtotal = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    let discountAmount = 0;
+
+    if (type === "pwd" || type === "senior") {
+      discountAmount = subtotal * 0.2; // 20% discount
+    } else if (type === "voucher") {
+      discountAmount = 100; // Fixed ₱100 discount
+    }
+
+    currentDiscount = { type: type, amount: discountAmount };
+    renderCart();
+  }
+
+  function removeDiscount() {
+    currentDiscount = { type: null, amount: 0 };
+    renderCart();
   }
 
   async function completeSale() {
@@ -383,10 +480,11 @@ block extra_css %}
       return;
     }
 
-    const total = cart.reduce(
+    const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
+    const total = subtotal - currentDiscount.amount;
 
     try {
       const response = await fetch("/admin/sales/create", {
@@ -396,7 +494,8 @@ block extra_css %}
         },
         body: JSON.stringify({
           items: cart,
-          total: total,
+          payment_method: "cash",
+          discount_type: currentDiscount.type || "none",
         }),
       });
 
@@ -406,6 +505,7 @@ block extra_css %}
         alert("Sale completed successfully!");
         window.open(`/admin/receipt/${data.sale_id}`, "_blank");
         cart = [];
+        currentDiscount = { type: null, amount: 0 };
         renderCart();
         location.reload(); // Reload to update stock numbers
       } else {

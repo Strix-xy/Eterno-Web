@@ -45,20 +45,24 @@ def is_valid_email(email):
 def calculate_shipping_fee(has_address=False):
     """
     Calculate randomized shipping fee if address is provided
-    Uses configuration values for min/max range
+    Uses configuration values for min/max range (minimum ₱50)
     
     Args:
         has_address: Boolean indicating if shipping address is provided
     
     Returns:
-        Shipping fee amount (0 if no address, random between min-max otherwise)
+        Shipping fee amount (0 if no address, random between 50-200 otherwise)
     """
     if not has_address:
         return 0
     
-    # Get shipping fee range from config or use defaults
+    # Get shipping fee range from config or use defaults (min ₱50)
     min_fee = current_app.config.get('SHIPPING_FEE_MIN', 50)
     max_fee = current_app.config.get('SHIPPING_FEE_MAX', 200)
+    
+    # Ensure minimum is at least ₱50
+    if min_fee < 50:
+        min_fee = 50
     
     return random.randint(min_fee, max_fee)
 
@@ -181,7 +185,7 @@ def validate_payment_method(payment_method):
     Returns:
         Boolean indicating if payment method is valid
     """
-    valid_methods = ['cash', 'cod', 'gcash', 'bank_transfer']
+    valid_methods = ['cash', 'cod', 'gcash', 'credit_card', 'paypal', 'bank_transfer']
     return payment_method in valid_methods if payment_method else False
 
 

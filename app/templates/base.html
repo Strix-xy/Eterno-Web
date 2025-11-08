@@ -25,6 +25,16 @@
         --border-color: #2a2a2a;
       }
 
+      /* Light mode variables */
+      [data-theme="light"] {
+        --bg-black: #f5f5f5;
+        --bg-dark: #ffffff;
+        --text-white: #1a1a1a;
+        --text-gray: #666666;
+        --accent-glow: #1a1a1a;
+        --border-color: #e0e0e0;
+      }
+
       /* Main body styling */
       body {
         font-family: "Montserrat", sans-serif;
@@ -32,6 +42,7 @@
         color: var(--text-white);
         overflow-x: hidden;
         position: relative;
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
 
       /* Subtle smoke effect overlay */
@@ -75,6 +86,38 @@
         align-items: center;
         z-index: 1000;
         transition: all 0.3s ease;
+      }
+
+      [data-theme="light"] nav {
+        background: rgba(245, 245, 245, 0.95);
+      }
+
+      /* Theme toggle button */
+      .theme-toggle {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-white);
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        margin-left: 1rem;
+      }
+
+      .theme-toggle:hover {
+        border-color: var(--text-white);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      [data-theme="light"] .theme-toggle {
+        border-color: var(--border-color);
+        color: var(--text-white);
+      }
+
+      [data-theme="light"] .theme-toggle:hover {
+        border-color: var(--text-white);
+        background: rgba(0, 0, 0, 0.1);
       }
 
       nav:hover {
@@ -366,27 +409,36 @@
       </div>
 
       <!-- Dynamic navigation based on user role -->
-      <ul class="nav-links">
-        {% if session.role == 'admin' %}
-        <!-- Admin-specific links -->
-        <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-        <li><a href="{{ url_for('admin.pos') }}">POS</a></li>
-        <li><a href="{{ url_for('admin.inventory') }}">Inventory</a></li>
-        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-        {% elif session.user_id %}
-        <!-- Customer links when logged in -->
-        <li><a href="{{ url_for('customer.shop') }}">Shop</a></li>
-        <li><a href="{{ url_for('customer.about') }}">About</a></li>
-        <li><a href="{{ url_for('customer.cart') }}">Cart</a></li>
-        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-        {% else %}
-        <!-- Guest links -->
-        <li><a href="{{ url_for('main.index') }}">Home</a></li>
-        <li><a href="{{ url_for('customer.about') }}">About</a></li>
-        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-        {% endif %}
-      </ul>
+      <div style="display: flex; align-items: center; gap: 1rem">
+        <ul class="nav-links">
+          {% if session.role == 'admin' %}
+          <!-- Admin-specific links -->
+          <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('admin.pos') }}">POS</a></li>
+          <li><a href="{{ url_for('admin.inventory') }}">Inventory</a></li>
+          <li>
+            <a href="#" onclick="confirmLogout(); return false;">Logout</a>
+          </li>
+          {% elif session.user_id %}
+          <!-- Customer links when logged in -->
+          <li><a href="{{ url_for('customer.shop') }}">Shop</a></li>
+          <li><a href="{{ url_for('customer.about') }}">About</a></li>
+          <li><a href="{{ url_for('customer.cart') }}">Cart</a></li>
+          <li>
+            <a href="#" onclick="confirmLogout(); return false;">Logout</a>
+          </li>
+          {% else %}
+          <!-- Guest links -->
+          <li><a href="{{ url_for('main.index') }}">Home</a></li>
+          <li><a href="{{ url_for('customer.about') }}">About</a></li>
+          <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+          <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+          {% endif %}
+        </ul>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+          🌙 Dark
+        </button>
+      </div>
     </nav>
 
     <!-- Main content area -->
@@ -406,7 +458,183 @@
 
     <!-- Footer section -->
     <footer>
-      <p>© 2024 ETERNO - TIMELESS FASHION</p>
+      <div
+        style="
+          max-width: 1400px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 3rem;
+          text-align: left;
+          margin-bottom: 2rem;
+        "
+      >
+        <div>
+          <h3
+            style="
+              font-family: 'Cinzel', serif;
+              font-size: 1.5rem;
+              letter-spacing: 3px;
+              margin-bottom: 1rem;
+            "
+          >
+            ETERNO
+          </h3>
+          <p
+            style="
+              color: var(--text-gray);
+              line-height: 1.8;
+              letter-spacing: 1px;
+            "
+          >
+            Timeless fashion that transcends generations. Discover the eternal
+            elegance of our collection.
+          </p>
+        </div>
+
+        <div>
+          <h4
+            style="
+              font-family: 'Cinzel', serif;
+              font-size: 1.1rem;
+              letter-spacing: 2px;
+              margin-bottom: 1rem;
+            "
+          >
+            QUICK LINKS
+          </h4>
+          <ul style="list-style: none; padding: 0">
+            <li style="margin-bottom: 0.8rem">
+              <a
+                href="{{ url_for('customer.shop') }}"
+                style="
+                  color: var(--text-gray);
+                  text-decoration: none;
+                  letter-spacing: 1px;
+                  transition: all 0.3s ease;
+                "
+                >Shop</a
+              >
+            </li>
+            <li style="margin-bottom: 0.8rem">
+              <a
+                href="{{ url_for('customer.about') }}"
+                style="
+                  color: var(--text-gray);
+                  text-decoration: none;
+                  letter-spacing: 1px;
+                  transition: all 0.3s ease;
+                "
+                >About</a
+              >
+            </li>
+            {% if session.user_id %}
+            <li style="margin-bottom: 0.8rem">
+              <a
+                href="{{ url_for('customer.cart') }}"
+                style="
+                  color: var(--text-gray);
+                  text-decoration: none;
+                  letter-spacing: 1px;
+                  transition: all 0.3s ease;
+                "
+                >Cart</a
+              >
+            </li>
+            {% else %}
+            <li style="margin-bottom: 0.8rem">
+              <a
+                href="{{ url_for('auth.login') }}"
+                style="
+                  color: var(--text-gray);
+                  text-decoration: none;
+                  letter-spacing: 1px;
+                  transition: all 0.3s ease;
+                "
+                >Login</a
+              >
+            </li>
+            <li style="margin-bottom: 0.8rem">
+              <a
+                href="{{ url_for('auth.register') }}"
+                style="
+                  color: var(--text-gray);
+                  text-decoration: none;
+                  letter-spacing: 1px;
+                  transition: all 0.3s ease;
+                "
+                >Register</a
+              >
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <div>
+          <h4
+            style="
+              font-family: 'Cinzel', serif;
+              font-size: 1.1rem;
+              letter-spacing: 2px;
+              margin-bottom: 1rem;
+            "
+          >
+            CONTACT
+          </h4>
+          <p
+            style="
+              color: var(--text-gray);
+              line-height: 1.8;
+              letter-spacing: 1px;
+            "
+          >
+            Email: support@eterno.com<br />
+            Phone: +63 XXX XXX XXXX<br />
+            Address: Metro Manila, Philippines
+          </p>
+        </div>
+
+        <div>
+          <h4
+            style="
+              font-family: 'Cinzel', serif;
+              font-size: 1.1rem;
+              letter-spacing: 2px;
+              margin-bottom: 1rem;
+            "
+          >
+            FOLLOW US
+          </h4>
+          <p
+            style="
+              color: var(--text-gray);
+              line-height: 1.8;
+              letter-spacing: 1px;
+            "
+          >
+            Stay connected with us on social media for the latest updates and
+            exclusive offers.
+          </p>
+        </div>
+      </div>
+
+      <div
+        style="
+          border-top: 1px solid var(--border-color);
+          padding-top: 2rem;
+          text-align: center;
+        "
+      >
+        <p
+          style="
+            color: var(--text-gray);
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+          "
+        >
+          © 2024 ETERNO - TIMELESS FASHION. All rights reserved.
+        </p>
+      </div>
     </footer>
 
     <!-- Cart count updater script -->
@@ -432,6 +660,37 @@
           console.log("Could not fetch cart count");
         }
       }
+
+      // Logout confirmation
+      function confirmLogout() {
+        if (confirm("Are you sure you want to logout?")) {
+          window.location.href = "{{ url_for('auth.logout') }}";
+        }
+      }
+
+      // Theme toggle
+      function toggleTheme() {
+        const currentTheme =
+          document.documentElement.getAttribute("data-theme");
+        const newTheme = currentTheme === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        updateThemeButton(newTheme);
+      }
+
+      function updateThemeButton(theme) {
+        const btn = document.getElementById("themeToggle");
+        if (btn) {
+          btn.textContent = theme === "light" ? "🌙 Dark" : "☀️ Light";
+        }
+      }
+
+      // Load saved theme
+      window.addEventListener("DOMContentLoaded", function () {
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+        updateThemeButton(savedTheme);
+      });
     </script>
 
     {% block extra_js %}{% endblock %}

@@ -75,11 +75,11 @@ class Product(db.Model):
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'price': self.price,
+            'price': float(self.price) if self.price else 0,
             'stock': self.stock,
             'category': self.category,
             'image_url': self.image_url,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
         }
 
 

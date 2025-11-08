@@ -170,8 +170,8 @@ endblock %} {% block extra_css %}
             <div class="action-buttons">
               <button
                 class="btn btn-small btn-edit"
-                data-product="{{ product|tojson }}"
-                onclick="openEditModal(JSON.parse(this.dataset.product))"
+                data-product-id="{{ product.id }}"
+                onclick="openEditModal({{ product.id }})"
               >
                 EDIT
               </button>
@@ -233,7 +233,21 @@ endblock %} {% block extra_css %}
           type="text"
           id="productImage"
           placeholder="https://example.com/image.jpg"
+          oninput="updateImagePreview(this.value)"
         />
+        <div id="imagePreview" style="margin-top: 1rem; display: none">
+          <img
+            id="previewImg"
+            src=""
+            alt="Preview"
+            style="
+              max-width: 200px;
+              max-height: 200px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+            "
+          />
+        </div>
       </div>
 
       <div class="modal-actions">
@@ -252,28 +266,60 @@ endblock %} {% block extra_css %}
 </div>
 {% endblock %} {% block extra_js %}
 <script>
+  // Store all products data for easy access
+  const productsArray = {{ products_json|safe }};
+  const productsDataById = {};
+  productsArray.forEach(product => {
+    productsDataById[product.id] = product;
+  });
+
   let isEditMode = false;
+
+
+  function updateImagePreview(url) {
+    const previewDiv = document.getElementById("imagePreview");
+    const previewImg = document.getElementById("previewImg");
+
+    if (url && url.trim() !== "") {
+      previewImg.src = url;
+      previewImg.onerror = function() {
+        previewDiv.style.display = "none";
+      };
+      previewImg.onload = function() {
+        previewDiv.style.display = "block";
+      };
+    } else {
+      previewDiv.style.display = "none";
+    }
+  }
+
+  function openEditModal(productId) {
+    const product = productsDataById[productId];
+    if (!product) {
+      alert("Product data not found");
+      return;
+    }
+
+    isEditMode = true;
+    document.getElementById("modalTitle").textContent = "EDIT PRODUCT";
+    const { id, name, description, price, stock, category, image_url } = product;
+    document.getElementById("productId").value = id || "";
+    document.getElementById("productName").value = name || "";
+    document.getElementById("productDescription").value = description || "";
+    document.getElementById("productPrice").value = price || 0;
+    document.getElementById("productStock").value = stock || 0;
+    document.getElementById("productCategory").value = category || "";
+    document.getElementById("productImage").value = image_url || "";
+    updateImagePreview(image_url || "");
+    document.getElementById("productModal").classList.add("active");
+  }
 
   function openAddModal() {
     isEditMode = false;
     document.getElementById("modalTitle").textContent = "ADD PRODUCT";
     document.getElementById("productForm").reset();
     document.getElementById("productId").value = "";
-    document.getElementById("productModal").classList.add("active");
-  }
-
-  function openEditModal(product) {
-    isEditMode = true;
-    document.getElementById("modalTitle").textContent = "EDIT PRODUCT";
-    const { id, name, description, price, stock, category, image_url } =
-      product || {};
-    document.getElementById("productId").value = id;
-    document.getElementById("productName").value = name || "";
-    document.getElementById("productDescription").value = description || "";
-    document.getElementById("productPrice").value = price;
-    document.getElementById("productStock").value = stock;
-    document.getElementById("productCategory").value = category || "";
-    document.getElementById("productImage").value = image_url || "";
+    document.getElementById("imagePreview").style.display = "none";
     document.getElementById("productModal").classList.add("active");
   }
 

@@ -157,7 +157,12 @@ def inventory():
     # Get all products
     products = Product.query.order_by(Product.name).all()
     
-    return render_template('admin_inventory.html', products=products)
+    # Prepare products data as JSON for JavaScript
+    products_json = json.dumps([product.to_dict() for product in products])
+    
+    return render_template('admin_inventory.html', 
+                         products=products, 
+                         products_json=products_json)
 
 
 @admin_bp.route('/products/add', methods=['POST'])

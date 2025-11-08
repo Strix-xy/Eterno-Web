@@ -156,16 +156,16 @@ def generate_order_receipt(order):
     # Totals
     p.line(50, y_position, 550, y_position)
     y_position -= 20
-    
+
     p.setFont("Helvetica", 10)
     p.drawString(380, y_position, "Subtotal:")
     p.drawString(480, y_position, f"₱{order.subtotal:.2f}")
     y_position -= 20
-    
-    p.drawString(380, y_position, "Shipping:")
+
+    p.drawString(380, y_position, "Delivery Fee:")
     p.drawString(480, y_position, f"₱{order.shipping_fee:.2f}")
     y_position -= 20
-    
+
     p.setFont("Helvetica-Bold", 14)
     p.drawString(380, y_position, "TOTAL:")
     p.drawString(480, y_position, f"₱{order.total_amount:.2f}")

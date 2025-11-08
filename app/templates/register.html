@@ -112,12 +112,35 @@ block extra_css %}
 
       <div class="form-group">
         <label>Password</label>
-        <input
-          type="password"
-          name="password"
-          required
-          autocomplete="new-password"
-        />
+        <div style="position: relative">
+          <input
+            type="password"
+            name="password"
+            id="password"
+            required
+            autocomplete="new-password"
+            style="padding-right: 45px"
+          />
+          <button
+            type="button"
+            onclick="togglePassword()"
+            style="
+              position: absolute;
+              right: 10px;
+              top: 50%;
+              transform: translateY(-50%);
+              background: transparent;
+              border: none;
+              color: var(--text-gray);
+              cursor: pointer;
+              font-size: 0.9rem;
+              padding: 5px;
+            "
+            id="togglePasswordBtn"
+          >
+            Show
+          </button>
+        </div>
       </div>
 
       <button type="submit" class="btn" style="width: 100%">
@@ -133,4 +156,33 @@ block extra_css %}
     </div>
   </div>
 </div>
+{% endblock %} {% block extra_js %}
+<script>
+  function togglePassword() {
+    const passwordInput = document.getElementById("password");
+    const toggleBtn = document.getElementById("togglePasswordBtn");
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      toggleBtn.textContent = "Hide";
+    } else {
+      passwordInput.type = "password";
+      toggleBtn.textContent = "Show";
+    }
+  }
+
+  // Gmail validation
+  document
+    .querySelector('input[name="email"]')
+    .addEventListener("blur", function () {
+      const email = this.value.trim().toLowerCase();
+      if (email && !email.endsWith("@gmail.com")) {
+        this.setCustomValidity(
+          "Please enter a valid Gmail address (must end with @gmail.com)"
+        );
+      } else {
+        this.setCustomValidity("");
+      }
+    });
+</script>
 {% endblock %}

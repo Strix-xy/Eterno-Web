@@ -79,9 +79,14 @@ def register():
         if len(password) < 6:
             return render_template('register.html', error='Password must be at least 6 characters long')
         
-        # Validate email format
+        # Validate email format and Gmail requirement
         if not is_valid_email(email):
             return render_template('register.html', error='Invalid email format')
+        
+        # Require Gmail addresses
+        email_lower = email.lower().strip()
+        if not email_lower.endswith('@gmail.com'):
+            return render_template('register.html', error='Please use a Gmail address (must end with @gmail.com)')
         
         # Check if username already exists
         if User.query.filter_by(username=username).first():

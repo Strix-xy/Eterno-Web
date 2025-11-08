@@ -46,7 +46,10 @@ def cart():
         Cart.user_id == session['user_id']
     ).all()
     
-    return render_template('cart.html', cart_items=cart_items)
+    # Calculate total subtotal
+    total_subtotal = sum(product.price * cart_item.quantity for cart_item, product in cart_items)
+    
+    return render_template('cart.html', cart_items=cart_items, total_subtotal=total_subtotal)
 
 
 @customer_bp.route('/cart/count')
@@ -201,10 +204,25 @@ def checkout():
         data = request.json
         payment_method = data.get('payment_method')
         customer_address = sanitize_string(data.get('customer_address', ''))
+        voucher_applied = data.get('voucher_applied', False)
+        delivery_fee = data.get('delivery_fee', 0)
         
         # Validate payment method
-        if not validate_payment_method(payment_method):
+        valid_methods = ['cod', 'gcash', 'credit_card', 'paypal']
+        if payment_method not in valid_methods:
             return jsonify({'error': 'Invalid payment method'}), 400
+        
+        # Validate payment-specific fields
+        if payment_method == 'cod' and not customer_address:
+            return jsonify({'error': 'Delivery address is required for COD'}), 400
+        elif payment_method == 'gcash' and not data.get('gcash_number'):
+            return jsonify({'error': 'GCash number is required'}), 400
+        elif payment_method == 'credit_card':
+            if not data.get('card_number') or not data.get('card_expiry') or not data.get('card_cvv'):
+                return jsonify({'error': 'All card details are required'}), 400
+        elif payment_method == 'paypal':
+            if not data.get('paypal_email') or not data.get('paypal_name'):
+                return jsonify({'error': 'PayPal email and name are required'}), 400
         
         # Get user information
         user = User.query.get(session['user_id'])
@@ -223,16 +241,18 @@ def checkout():
         cart_data = calculate_cart_totals(cart_items)
         subtotal = cart_data['subtotal']
         
-        # Calculate shipping fee
-        from flask import current_app
-        shipping_fee = calculate_shipping_fee(bool(customer_address))
+        # Apply voucher discount if applicable
+        discount_amount = 0
+        if voucher_applied:
+            discount_amount = 100  # Fixed ₱100 voucher discount
+            subtotal = max(0, subtotal - discount_amount)
         
-        # Add COD fee if applicable
-        if payment_method == 'cod':
-            cod_fee = current_app.config.get('COD_ADDITIONAL_FEE', 50)
-            shipping_fee += cod_fee
+        # Use provided delivery fee or calculate random one (min ₱50)
+        import random
+        if not delivery_fee or delivery_fee < 50:
+            delivery_fee = random.randint(50, 200)  # Random between 50-200
         
-        total_amount = subtotal + shipping_fee
+        total_amount = subtotal + delivery_fee
         
         # Validate stock and prepare order items
         order_items = []
@@ -258,8 +278,8 @@ def checkout():
             customer_name=user.username,
             customer_email=user.email,
             customer_address=customer_address if customer_address else None,
-            subtotal=subtotal,
-            shipping_fee=shipping_fee,
+            subtotal=subtotal + discount_amount,  # Store original subtotal before discount
+            shipping_fee=delivery_fee,
             total_amount=total_amount,
             payment_method=payment_method,
             items=json.dumps(order_items),
@@ -280,7 +300,7 @@ def checkout():
             'success': True,
             'order_id': new_order.id,
             'payment_method': payment_method,
-            'shipping_fee': shipping_fee,
+            'shipping_fee': delivery_fee,
             'total_amount': total_amount
         })
     
