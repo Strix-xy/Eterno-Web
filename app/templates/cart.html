@@ -422,6 +422,7 @@
           </div>
           <div id="voucherApplied" style="display: none; color: #4caf50; margin-bottom: 1rem; font-size: 0.9rem;">
             Voucher applied: -₱100
+            <button onclick="removeVoucher()" style="margin-left: 1rem; background: transparent; border: 1px solid #4caf50; color: #4caf50; padding: 0.3rem 0.8rem; cursor: pointer; font-size: 0.8rem; transition: all 0.3s ease;" onmouseover="this.style.background='#4caf50'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#4caf50'">Remove</button>
           </div>
         </div>
 
@@ -477,12 +478,31 @@
                 type="tel"
                 id="gcashNumber"
                 placeholder="09XX XXX XXXX"
+                style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white); margin-bottom: 1rem;"
+                required
+              />
+              <label style="display: block; margin-bottom: 0.5rem;">Account Name *</label>
+              <input
+                type="text"
+                id="gcashAccountName"
+                placeholder="Enter account holder name"
                 style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white);"
                 required
               />
             </div>
             
             <div id="cardDetails" style="display: none;">
+              <label style="display: block; margin-bottom: 0.5rem;">Card Type *</label>
+              <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div class="payment-option" style="flex: 1; padding: 0.8rem;">
+                  <input type="radio" id="cardTypeCredit" name="cardType" value="credit" checked />
+                  <label for="cardTypeCredit" style="margin: 0; cursor: pointer;">Credit</label>
+                </div>
+                <div class="payment-option" style="flex: 1; padding: 0.8rem;">
+                  <input type="radio" id="cardTypeDebit" name="cardType" value="debit" />
+                  <label for="cardTypeDebit" style="margin: 0; cursor: pointer;">Debit</label>
+                </div>
+              </div>
               <label style="display: block; margin-bottom: 0.5rem;">Card Number *</label>
               <input
                 type="text"
@@ -626,7 +646,10 @@
       } else if (paymentMethod === "gcash") {
         paymentDetails.style.display = "block";
         gcashDetails.style.display = "block";
-        document.getElementById("gcashNumber").required = true;
+        const gcashNumberInput = document.getElementById("gcashNumber");
+        const gcashAccountNameInput = document.getElementById("gcashAccountName");
+        if (gcashNumberInput) gcashNumberInput.required = true;
+        if (gcashAccountNameInput) gcashAccountNameInput.required = true;
       } else if (paymentMethod === "credit_card") {
         paymentDetails.style.display = "block";
         cardDetails.style.display = "block";
@@ -653,6 +676,13 @@
       } else {
         alert("Please enter a voucher code");
       }
+    }
+
+    function removeVoucher() {
+      voucherApplied = false;
+      document.getElementById("voucherApplied").style.display = "none";
+      document.getElementById("voucherCode").value = "";
+      updateTotal();
     }
 
     function updateTotal() {
@@ -693,12 +723,19 @@
         paymentDetails.address = address;
       } else if (paymentValue === "gcash") {
         const gcashNumber = document.getElementById("gcashNumber").value.trim();
+        const gcashAccountName = document.getElementById("gcashAccountName").value.trim();
         if (!gcashNumber) {
           alert("Please enter your GCash number");
           return;
         }
+        if (!gcashAccountName) {
+          alert("Please enter your GCash account name");
+          return;
+        }
         paymentDetails.gcash_number = gcashNumber;
+        paymentDetails.gcash_account_name = gcashAccountName;
       } else if (paymentValue === "credit_card") {
+        const cardType = document.querySelector('input[name="cardType"]:checked').value;
         const cardNumber = document.getElementById("cardNumber").value.trim();
         const cardExpiry = document.getElementById("cardExpiry").value.trim();
         const cardCVV = document.getElementById("cardCVV").value.trim();
@@ -706,6 +743,7 @@
           alert("Please fill in all card details");
           return;
         }
+        paymentDetails.card_type = cardType;
         paymentDetails.card_number = cardNumber;
         paymentDetails.card_expiry = cardExpiry;
         paymentDetails.card_cvv = cardCVV;
@@ -727,7 +765,7 @@
     function showConfirmationSummary(paymentMethod, paymentDetails) {
       const subtotal = baseSubtotal;
       const discount = voucherApplied ? 100 : 0;
-      const deliveryFee = 50 + Math.floor(Math.random() * 150); // Random between 50-200
+      const deliveryFee = 50 + Math.floor(Math.random() * 51); // Random between 50-100
       const total = subtotal - discount + deliveryFee;
 
       let summary = `ORDER CONFIRMATION\n\n`;
@@ -743,7 +781,9 @@
         summary += `Delivery Address: ${paymentDetails.address}\n`;
       } else if (paymentMethod === "gcash") {
         summary += `GCash Number: ${paymentDetails.gcash_number}\n`;
+        summary += `Account Name: ${paymentDetails.gcash_account_name}\n`;
       } else if (paymentMethod === "credit_card") {
+        summary += `Card Type: ${paymentDetails.card_type.toUpperCase()}\n`;
         summary += `Card: ****${paymentDetails.card_number.slice(-4)}\n`;
       } else if (paymentMethod === "paypal") {
         summary += `PayPal: ${paymentDetails.paypal_email}\n`;
@@ -769,6 +809,8 @@
             payment_method: paymentMethod,
             customer_address: paymentDetails.address || "",
             gcash_number: paymentDetails.gcash_number || "",
+            gcash_account_name: paymentDetails.gcash_account_name || "",
+            card_type: paymentDetails.card_type || "",
             card_number: paymentDetails.card_number || "",
             card_expiry: paymentDetails.card_expiry || "",
             card_cvv: paymentDetails.card_cvv || "",

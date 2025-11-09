@@ -145,6 +145,236 @@
     font-size: 0.9rem;
     letter-spacing: 1px;
   }
+
+  .orders-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+  }
+
+  .orders-modal.active {
+    display: flex;
+  }
+
+  .orders-modal-content {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    padding: 3rem;
+    max-width: 1200px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 2rem;
+  }
+
+  .orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .orders-header h2 {
+    font-family: "Cinzel", serif;
+    font-size: 2rem;
+    letter-spacing: 3px;
+  }
+
+  .order-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .filter-btn {
+    padding: 0.8rem 1.5rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+  }
+
+  .filter-btn.active {
+    border-color: var(--text-white);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .orders-table th {
+    padding: 1rem;
+    text-align: left;
+    font-family: "Cinzel", serif;
+    letter-spacing: 2px;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .orders-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .order-details-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid var(--text-white);
+    color: var(--text-white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    font-size: 0.8rem;
+  }
+
+  .order-details-btn:hover {
+    background: var(--text-white);
+    color: var(--bg-black);
+  }
+
+  .order-details-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+  }
+
+  .order-details-modal.active {
+    display: flex;
+  }
+
+  .order-details-content {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    padding: 3rem;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .status-pending {
+    color: #ff9800;
+  }
+
+  .status-paid {
+    color: #4caf50;
+  }
+
+  .status-completed {
+    color: #4caf50;
+  }
+
+  .products-modal,
+  .revenue-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+  }
+
+  .products-modal.active,
+  .revenue-modal.active {
+    display: flex;
+  }
+
+  .products-modal-content,
+  .revenue-modal-content {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    padding: 3rem;
+    max-width: 1200px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 2rem;
+  }
+
+  .product-item {
+    display: grid;
+    grid-template-columns: 80px 1fr auto auto auto;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.3s ease;
+  }
+
+  .product-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .product-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+
+  .product-item-placeholder {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Cinzel", serif;
+    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+
+  .revenue-breakdown {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .revenue-item {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+
+  .revenue-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .revenue-amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4caf50;
+  }
 </style>
 {% endblock %} {% block content %}
 <div class="dashboard-container">
@@ -154,19 +384,19 @@
   </div>
 
   <div class="dashboard-grid">
-    <div class="stat-card">
+    <div class="stat-card" style="cursor: pointer" onclick="viewProducts()">
       <div class="stat-icon">📦</div>
       <div class="stat-value">{{ total_products }}</div>
       <div class="stat-label">Total Products</div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card" style="cursor: pointer" onclick="viewRevenue()">
       <div class="stat-icon">💰</div>
       <div class="stat-value">₱{{ "%.2f"|format(total_revenue) }}</div>
       <div class="stat-label">Total Revenue</div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card" style="cursor: pointer" onclick="viewOrders()">
       <div class="stat-icon">🛒</div>
       <div class="stat-value">{{ total_orders }}</div>
       <div class="stat-label">Total Orders</div>
@@ -191,8 +421,513 @@
     </div>
   </div>
 </div>
+
+<!-- Orders Modal -->
+<div class="orders-modal" id="ordersModal">
+  <div class="orders-modal-content">
+    <div class="orders-header">
+      <h2>ORDERS</h2>
+      <button class="btn" onclick="closeOrdersModal()">CLOSE</button>
+    </div>
+    <div class="order-filters">
+      <button class="filter-btn active" onclick="filterOrders('all', this)">
+        ALL ORDERS
+      </button>
+      <button class="filter-btn" onclick="filterOrders('paid', this)">
+        PAID
+      </button>
+      <button class="filter-btn" onclick="filterOrders('pending', this)">
+        PENDING
+      </button>
+    </div>
+    <div id="ordersTableContainer">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th>Actions</th>
+            <th>Change Status</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+          <!-- Orders will be loaded here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="order-details-modal" id="orderDetailsModal">
+  <div class="order-details-content">
+    <div class="orders-header">
+      <h2>ORDER DETAILS</h2>
+      <button class="btn" onclick="closeOrderDetailsModal()">CLOSE</button>
+    </div>
+    <div id="orderDetailsContent">
+      <!-- Order details will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Products Modal -->
+<div class="products-modal" id="productsModal">
+  <div class="products-modal-content">
+    <div class="orders-header">
+      <h2>ALL PRODUCTS</h2>
+      <button class="btn" onclick="closeProductsModal()">CLOSE</button>
+    </div>
+    <div id="productsListContainer">
+      <!-- Products will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- Revenue Modal -->
+<div class="revenue-modal" id="revenueModal">
+  <div class="revenue-modal-content">
+    <div class="orders-header">
+      <h2>REVENUE BREAKDOWN</h2>
+      <button class="btn" onclick="closeRevenueModal()">CLOSE</button>
+    </div>
+    <div id="revenueContent">
+      <!-- Revenue breakdown will be loaded here -->
+    </div>
+  </div>
+</div>
 {% endblock %} {% block extra_js %}
 <script>
-  // Statistics are loaded from the backend via template variables
+  let currentFilter = "all";
+  let allOrders = [];
+
+  async function viewOrders() {
+    try {
+      const response = await fetch("/admin/orders");
+      const data = await response.json();
+      if (data.success) {
+        allOrders = data.orders;
+        displayOrders(allOrders);
+        document.getElementById("ordersModal").classList.add("active");
+      } else {
+        alert("Error loading orders: " + data.error);
+      }
+    } catch (error) {
+      alert("Error loading orders: " + error.message);
+    }
+  }
+
+  function filterOrders(filter, button) {
+    currentFilter = filter;
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+    if (button) {
+      button.classList.add("active");
+    } else {
+      // If no button provided, find and activate the correct one
+      const buttons = document.querySelectorAll(".filter-btn");
+      buttons.forEach((btn) => {
+        if (btn.textContent.trim().includes(filter.toUpperCase())) {
+          btn.classList.add("active");
+        }
+      });
+    }
+
+    let filteredOrders = allOrders;
+    if (filter === "paid") {
+      filteredOrders = allOrders.filter(
+        (order) => order.status === "completed" || order.status === "paid"
+      );
+    } else if (filter === "pending") {
+      filteredOrders = allOrders.filter((order) => order.status === "pending");
+    }
+
+    displayOrders(filteredOrders);
+  }
+
+  function displayOrders(orders) {
+    const tbody = document.getElementById("ordersTableBody");
+    if (!tbody) return;
+    if (!orders || orders.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No orders found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = orders
+      .map((order) => {
+        const date = new Date(order.created_at);
+        const statusClass =
+          order.status === "completed" || order.status === "paid"
+            ? "status-paid"
+            : "status-pending";
+        return `
+        <tr>
+          <td>#${order.id}</td>
+          <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
+          <td>${order.customer_name}</td>
+          <td>₱${parseFloat(order.total_amount).toFixed(2)}</td>
+          <td class="${statusClass}">${order.status.toUpperCase()}</td>
+          <td>${order.payment_method.toUpperCase()}</td>
+          <td><button class="order-details-btn" onclick="viewOrderDetails(${
+            order.id
+          })">VIEW DETAILS</button></td>
+          <td>
+            <select class="status-select" onchange="updateOrderStatus(${
+              order.id
+            }, this.value)" style="padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white); cursor: pointer;">
+              <option value="pending" ${
+                order.status === "pending" ? "selected" : ""
+              }>PENDING</option>
+              <option value="completed" ${
+                order.status === "completed" || order.status === "paid"
+                  ? "selected"
+                  : ""
+              }>COMPLETED</option>
+            </select>
+          </td>
+        </tr>
+      `;
+      })
+      .join("");
+  }
+
+  async function viewOrderDetails(orderId) {
+    try {
+      const response = await fetch(`/admin/orders/${orderId}`);
+      const data = await response.json();
+      if (data.success) {
+        displayOrderDetails(data.order);
+        document.getElementById("orderDetailsModal").classList.add("active");
+      } else {
+        alert("Error loading order details: " + data.error);
+      }
+    } catch (error) {
+      alert("Error loading order details: " + error.message);
+    }
+  }
+
+  function displayOrderDetails(order) {
+    if (!order) return;
+    const container = document.getElementById("orderDetailsContent");
+    if (!container) return;
+
+    let items = [];
+    try {
+      items = JSON.parse(order.items || "[]");
+    } catch (e) {
+      console.error("Error parsing order items:", e);
+      items = [];
+    }
+
+    const date = new Date(order.created_at);
+    const statusClass =
+      order.status === "completed" || order.status === "paid"
+        ? "status-paid"
+        : "status-pending";
+
+    const content = `
+      <div style="margin-bottom: 2rem;">
+        <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px; margin-bottom: 1rem;">ORDER #${
+          order.id
+        }</h3>
+        <p><strong>Date:</strong> ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</p>
+        <p><strong>Customer:</strong> ${order.customer_name}</p>
+        <p><strong>Email:</strong> ${order.customer_email}</p>
+        ${
+          order.customer_address
+            ? `<p><strong>Address:</strong> ${order.customer_address}</p>`
+            : ""
+        }
+        <p><strong>Payment Method:</strong> ${order.payment_method.toUpperCase()}</p>
+        <p><strong>Status:</strong> <span class="${statusClass}">${order.status.toUpperCase()}</span></p>
+      </div>
+      <div style="margin-bottom: 2rem;">
+        <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px; margin-bottom: 1rem;">ITEMS</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <th style="padding: 0.5rem; text-align: left;">Product</th>
+              <th style="padding: 0.5rem; text-align: right;">Quantity</th>
+              <th style="padding: 0.5rem; text-align: right;">Price</th>
+              <th style="padding: 0.5rem; text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items
+              .map(
+                (item) => `
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.5rem;">${item.product_name}</td>
+                <td style="padding: 0.5rem; text-align: right;">${
+                  item.quantity
+                }</td>
+                <td style="padding: 0.5rem; text-align: right;">₱${parseFloat(
+                  item.price
+                ).toFixed(2)}</td>
+                <td style="padding: 0.5rem; text-align: right;">₱${(
+                  parseFloat(item.price) * item.quantity
+                ).toFixed(2)}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+      <div style="border-top: 2px solid var(--border-color); padding-top: 1rem;">
+        <p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Subtotal:</span>
+          <span>₱${parseFloat(order.subtotal).toFixed(2)}</span>
+        </p>
+        <p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Shipping Fee:</span>
+          <span>₱${parseFloat(order.shipping_fee || 0).toFixed(2)}</span>
+        </p>
+        <p style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-top: 1rem;">
+          <span>Total:</span>
+          <span>₱${parseFloat(order.total_amount).toFixed(2)}</span>
+        </p>
+      </div>
+    `;
+
+    container.innerHTML = content;
+  }
+
+  function closeOrdersModal() {
+    document.getElementById("ordersModal").classList.remove("active");
+  }
+
+  function closeOrderDetailsModal() {
+    document.getElementById("orderDetailsModal").classList.remove("active");
+  }
+
+  // Close modals when clicking outside
+  document.getElementById("ordersModal").addEventListener("click", (e) => {
+    if (e.target.id === "ordersModal") {
+      closeOrdersModal();
+    }
+  });
+
+  document
+    .getElementById("orderDetailsModal")
+    .addEventListener("click", (e) => {
+      if (e.target.id === "orderDetailsModal") {
+        closeOrderDetailsModal();
+      }
+    });
+
+  // Products Modal Functions
+  async function viewProducts() {
+    try {
+      const response = await fetch("/admin/products/list");
+      const data = await response.json();
+      if (data.success) {
+        displayProducts(data.products);
+        document.getElementById("productsModal").classList.add("active");
+      } else {
+        alert("Error loading products: " + data.error);
+      }
+    } catch (error) {
+      alert("Error loading products: " + error.message);
+    }
+  }
+
+  function displayProducts(products) {
+    const container = document.getElementById("productsListContainer");
+    if (!container) return;
+    if (!products || products.length === 0) {
+      container.innerHTML =
+        '<p style="text-align: center; padding: 2rem;">No products found</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${products
+            .map(
+              (product) => `
+            <tr>
+              <td>
+                ${
+                  product.image_url
+                    ? `<img src="${product.image_url}" alt="${product.name}" class="product-item-image" />`
+                    : `<div class="product-item-placeholder">E</div>`
+                }
+              </td>
+              <td>${product.name}</td>
+              <td>${product.category || "Uncategorized"}</td>
+              <td>₱${parseFloat(product.price).toFixed(2)}</td>
+              <td class="${
+                product.stock === 0
+                  ? "stock-out"
+                  : product.stock < 10
+                  ? "stock-low"
+                  : ""
+              }">${product.stock}</td>
+            </tr>
+          `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function closeProductsModal() {
+    document.getElementById("productsModal").classList.remove("active");
+  }
+
+  // Revenue Modal Functions
+  async function viewRevenue() {
+    try {
+      const response = await fetch("/admin/revenue");
+      const data = await response.json();
+      if (data.success) {
+        displayRevenue(data.revenue);
+        document.getElementById("revenueModal").classList.add("active");
+      } else {
+        alert("Error loading revenue: " + data.error);
+      }
+    } catch (error) {
+      alert("Error loading revenue: " + error.message);
+    }
+  }
+
+  function displayRevenue(revenue) {
+    const container = document.getElementById("revenueContent");
+    if (!container || !revenue) return;
+    container.innerHTML = `
+      <div class="revenue-breakdown">
+        <div class="revenue-item">
+          <div class="revenue-item-header">
+            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Total Revenue</h3>
+            <div class="revenue-amount">₱${parseFloat(revenue.total).toFixed(
+              2
+            )}</div>
+          </div>
+        </div>
+        <div class="revenue-item">
+          <div class="revenue-item-header">
+            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">From Orders</h3>
+            <div class="revenue-amount">₱${parseFloat(
+              revenue.from_orders
+            ).toFixed(2)}</div>
+          </div>
+          <p style="color: var(--text-gray); margin-top: 0.5rem;">Total: ${
+            revenue.orders_count
+          } orders</p>
+        </div>
+        <div class="revenue-item">
+          <div class="revenue-item-header">
+            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">From POS Sales</h3>
+            <div class="revenue-amount">₱${parseFloat(revenue.from_pos).toFixed(
+              2
+            )}</div>
+          </div>
+          <p style="color: var(--text-gray); margin-top: 0.5rem;">Total: ${
+            revenue.pos_count
+          } sales</p>
+        </div>
+        <div class="revenue-item">
+          <div class="revenue-item-header">
+            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Average Order Value</h3>
+            <div class="revenue-amount">₱${parseFloat(
+              revenue.avg_order_value
+            ).toFixed(2)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function closeRevenueModal() {
+    document.getElementById("revenueModal").classList.remove("active");
+  }
+
+  // Update Order Status
+  async function updateOrderStatus(orderId, newStatus) {
+    if (
+      !confirm(`Change order #${orderId} status to ${newStatus.toUpperCase()}?`)
+    ) {
+      // Reload to reset the select
+      const response = await fetch("/admin/orders");
+      const data = await response.json();
+      if (data.success) {
+        allOrders = data.orders;
+        filterOrders(currentFilter, null);
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch(`/admin/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update local orders array
+        const orderIndex = allOrders.findIndex((o) => o.id === orderId);
+        if (orderIndex !== -1) {
+          allOrders[orderIndex].status = newStatus;
+        }
+        // Refresh display
+        filterOrders(currentFilter, null);
+        alert("Order status updated successfully!");
+      } else {
+        alert("Error: " + data.error);
+        // Reload to reset
+        const response = await fetch("/admin/orders");
+        const data = await response.json();
+        if (data.success) {
+          allOrders = data.orders;
+          filterOrders(currentFilter, null);
+        }
+      }
+    } catch (error) {
+      alert("Error: " + error.message);
+      // Reload to reset
+      const response = await fetch("/admin/orders");
+      const data = await response.json();
+      if (data.success) {
+        allOrders = data.orders;
+        filterOrders(currentFilter, null);
+      }
+    }
+  }
+
+  // Close modals when clicking outside
+  document.getElementById("productsModal").addEventListener("click", (e) => {
+    if (e.target.id === "productsModal") {
+      closeProductsModal();
+    }
+  });
+
+  document.getElementById("revenueModal").addEventListener("click", (e) => {
+    if (e.target.id === "revenueModal") {
+      closeRevenueModal();
+    }
+  });
 </script>
 {% endblock %}

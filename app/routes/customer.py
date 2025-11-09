@@ -247,10 +247,10 @@ def checkout():
             discount_amount = 100  # Fixed ₱100 voucher discount
             subtotal = max(0, subtotal - discount_amount)
         
-        # Use provided delivery fee or calculate random one (min ₱50)
+        # Use provided delivery fee or calculate random one (min ₱50, max ₱100)
         import random
         if not delivery_fee or delivery_fee < 50:
-            delivery_fee = random.randint(50, 200)  # Random between 50-200
+            delivery_fee = random.randint(50, 100)  # Random between 50-100
         
         total_amount = subtotal + delivery_fee
         

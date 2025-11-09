@@ -12,6 +12,9 @@ from app.utils.helpers import (
 from app.utils.export import export_to_excel
 from app.utils.pdf import generate_sale_receipt
 import json
+import os
+from werkzeug.utils import secure_filename
+from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -279,3 +282,209 @@ def delete_product(product_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to delete product'}), 500
+
+
+# ==================== ORDER MANAGEMENT ====================
+
+@admin_bp.route('/orders')
+def get_orders():
+    """Get all orders for admin dashboard"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        # Get all orders from both Order and Sale models
+        orders = Order.query.order_by(Order.created_at.desc()).all()
+        
+        # Convert to list of dictionaries
+        orders_list = [order.to_dict() for order in orders]
+        
+        return jsonify({
+            'success': True,
+            'orders': orders_list
+        })
+    
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch orders'}), 500
+
+
+@admin_bp.route('/orders/<int:order_id>')
+def get_order_details(order_id):
+    """Get detailed information about a specific order"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        order = Order.query.get_or_404(order_id)
+        
+        return jsonify({
+            'success': True,
+            'order': order.to_dict()
+        })
+    
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch order details'}), 500
+
+
+@admin_bp.route('/orders/<int:order_id>/status', methods=['PUT'])
+def update_order_status(order_id):
+    """Update order status"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        order = Order.query.get_or_404(order_id)
+        data = request.json
+        new_status = data.get('status')
+        
+        # Validate status
+        valid_statuses = ['pending', 'completed', 'processing', 'shipped', 'delivered', 'cancelled']
+        if new_status not in valid_statuses:
+            return jsonify({'error': 'Invalid status'}), 400
+        
+        order.status = new_status
+        db.session.commit()
+        
+        # Export to Excel
+        export_to_excel()
+        
+        return jsonify({
+            'success': True,
+            'order': order.to_dict()
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to update order status'}), 500
+
+
+@admin_bp.route('/products/list')
+def get_products_list():
+    """Get all products for admin dashboard"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        products = Product.query.order_by(Product.name).all()
+        products_list = [product.to_dict() for product in products]
+        
+        return jsonify({
+            'success': True,
+            'products': products_list
+        })
+    
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch products'}), 500
+
+
+@admin_bp.route('/products/<int:product_id>/orders')
+def get_product_orders(product_id):
+    """Get order IDs that contain a specific product"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        # Get all orders
+        orders = Order.query.all()
+        order_ids = []
+        
+        # Check each order's items for the product
+        for order in orders:
+            try:
+                items = json.loads(order.items)
+                for item in items:
+                    if item.get('product_id') == product_id:
+                        order_ids.append(order.id)
+                        break  # Only add order ID once
+            except:
+                continue
+        
+        return jsonify({
+            'success': True,
+            'order_ids': sorted(order_ids, reverse=True)  # Most recent first
+        })
+    
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch product orders'}), 500
+
+
+@admin_bp.route('/revenue')
+def get_revenue_breakdown():
+    """Get revenue breakdown for admin dashboard"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        # Calculate revenue from orders
+        orders = Order.query.all()
+        orders_revenue = sum(order.total_amount for order in orders)
+        orders_count = len(orders)
+        
+        # Calculate revenue from POS sales
+        sales = Sale.query.all()
+        pos_revenue = sum(sale.total_amount for sale in sales)
+        pos_count = len(sales)
+        
+        total_revenue = orders_revenue + pos_revenue
+        avg_order_value = total_revenue / (orders_count + pos_count) if (orders_count + pos_count) > 0 else 0
+        
+        return jsonify({
+            'success': True,
+            'revenue': {
+                'total': total_revenue,
+                'from_orders': orders_revenue,
+                'from_pos': pos_revenue,
+                'orders_count': orders_count,
+                'pos_count': pos_count,
+                'avg_order_value': avg_order_value
+            }
+        })
+    
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch revenue'}), 500
+
+
+# ==================== IMAGE UPLOAD ====================
+
+@admin_bp.route('/products/upload-image', methods=['POST'])
+def upload_product_image():
+    """Upload product image file"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Check if file is an image
+        if not file.content_type.startswith('image/'):
+            return jsonify({'error': 'File must be an image'}), 400
+        
+        # Create uploads directory if it doesn't exist
+        upload_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'app', 'static', 'images', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Generate secure filename with timestamp
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+        filename = timestamp + filename
+        
+        # Save file
+        file_path = os.path.join(upload_folder, filename)
+        file.save(file_path)
+        
+        # Return URL path
+        image_url = f'/static/images/uploads/{filename}'
+        
+        return jsonify({
+            'success': True,
+            'image_url': image_url
+        })
+    
+    except Exception as e:
+        return jsonify({'error': 'Failed to upload image'}), 500

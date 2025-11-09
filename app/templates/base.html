@@ -25,14 +25,17 @@
         --border-color: #2a2a2a;
       }
 
-      /* Light mode variables */
+      /* Light mode variables with accents and character */
       [data-theme="light"] {
-        --bg-black: #f5f5f5;
+        --bg-black: #f5f3f0;
         --bg-dark: #ffffff;
-        --text-white: #1a1a1a;
-        --text-gray: #666666;
-        --accent-glow: #1a1a1a;
-        --border-color: #e0e0e0;
+        --text-white: #2c2c2c;
+        --text-gray: #6b6b6b;
+        --accent-glow: #8b7355;
+        --border-color: #d4c4b0;
+        --accent-primary: #c9a961;
+        --accent-secondary: #d4a574;
+        --accent-tertiary: #e8d5b7;
       }
 
       /* Main body styling */
@@ -63,6 +66,15 @@
         animation: smokeFloat 20s infinite alternate;
       }
 
+      [data-theme="light"] body::before {
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(201, 169, 97, 0.08) 0%,
+          rgba(232, 213, 183, 0.03) 30%,
+          transparent 60%
+        );
+      }
+
       @keyframes smokeFloat {
         0% {
           transform: translate(0, 0);
@@ -89,39 +101,52 @@
       }
 
       [data-theme="light"] nav {
-        background: rgba(245, 245, 245, 0.95);
+        background: rgba(255, 255, 255, 0.95);
+        border-bottom-color: var(--border-color);
+        box-shadow: 0 2px 10px rgba(201, 169, 97, 0.1);
       }
 
-      /* Theme toggle button */
+      /* Minimal theme toggle button */
       .theme-toggle {
         background: transparent;
-        border: 1px solid var(--border-color);
+        border: none;
         color: var(--text-white);
-        padding: 0.5rem 1rem;
+        padding: 0.5rem;
         cursor: pointer;
-        letter-spacing: 1px;
-        font-size: 0.85rem;
+        font-size: 1.2rem;
         transition: all 0.3s ease;
         margin-left: 1rem;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        opacity: 0.7;
       }
 
       .theme-toggle:hover {
-        border-color: var(--text-white);
+        opacity: 1;
         background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.1);
       }
 
       [data-theme="light"] .theme-toggle {
-        border-color: var(--border-color);
-        color: var(--text-white);
+        color: var(--accent-primary);
+        opacity: 0.8;
       }
 
       [data-theme="light"] .theme-toggle:hover {
-        border-color: var(--text-white);
-        background: rgba(0, 0, 0, 0.1);
+        background: rgba(201, 169, 97, 0.15);
+        opacity: 1;
       }
 
       nav:hover {
         border-bottom-color: rgba(255, 255, 255, 0.2);
+      }
+
+      [data-theme="light"] nav:hover {
+        border-bottom-color: var(--accent-primary);
       }
 
       /* Logo section with brand name and icon */
@@ -195,6 +220,15 @@
         width: 100%;
       }
 
+      [data-theme="light"] .nav-links a:hover {
+        color: var(--accent-primary);
+      }
+
+      [data-theme="light"] .nav-links a:hover::after {
+        background: var(--accent-primary);
+        box-shadow: 0 0 8px rgba(201, 169, 97, 0.4);
+      }
+
       /* Main content area */
       main {
         position: relative;
@@ -243,6 +277,20 @@
         left: 0;
       }
 
+      [data-theme="light"] .btn {
+        border-color: var(--accent-primary);
+        color: var(--accent-primary);
+      }
+
+      [data-theme="light"] .btn::before {
+        background: var(--accent-primary);
+      }
+
+      [data-theme="light"] .btn:hover {
+        color: var(--bg-dark);
+        box-shadow: 0 0 20px rgba(201, 169, 97, 0.4);
+      }
+
       /* Form group styling */
       .form-group {
         margin-bottom: 1.5rem;
@@ -285,9 +333,21 @@
         transition: all 0.3s ease;
       }
 
+      [data-theme="light"] .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: var(--border-color);
+        box-shadow: 0 2px 8px rgba(201, 169, 97, 0.08);
+      }
+
       .card:hover {
         border-color: rgba(255, 255, 255, 0.2);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        transform: translateY(-5px);
+      }
+
+      [data-theme="light"] .card:hover {
+        border-color: var(--accent-primary);
+        box-shadow: 0 8px 24px rgba(201, 169, 97, 0.2);
         transform: translateY(-5px);
       }
 
@@ -399,12 +459,6 @@
     <!-- Main Navigation Bar -->
     <nav>
       <div class="logo-section">
-        <!-- Brand logo image -->
-        <img
-          src="https://img.icons8.com/ios-filled/50/ffffff/infinity.png"
-          alt="Eterno Logo"
-          class="logo-icon"
-        />
         <div class="logo">ETERNO</div>
       </div>
 
@@ -435,8 +489,13 @@
           <li><a href="{{ url_for('auth.register') }}">Register</a></li>
           {% endif %}
         </ul>
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
-          🌙 Dark
+        <button
+          class="theme-toggle"
+          onclick="toggleTheme()"
+          id="themeToggle"
+          title="Toggle theme"
+        >
+          <span id="themeIcon">🌙</span>
         </button>
       </div>
     </nav>
@@ -588,9 +647,20 @@
               letter-spacing: 1px;
             "
           >
-            Email: support@eterno.com<br />
-            Phone: +63 XXX XXX XXXX<br />
-            Address: Metro Manila, Philippines
+            Email:
+            <a
+              href="mailto:etern0.mnl@gmail.com"
+              style="
+                color: var(--text-gray);
+                text-decoration: none;
+                transition: color 0.3s ease;
+              "
+              onmouseover="this.style.color='var(--text-white)'"
+              onmouseout="this.style.color='var(--text-gray)'"
+              >etern0.mnl@gmail.com</a
+            ><br />
+            Address: 6C Kingston Street, Greenland Phase 1, Marikina City,
+            Philippines
           </p>
         </div>
 
@@ -612,8 +682,34 @@
               letter-spacing: 1px;
             "
           >
-            Stay connected with us on social media for the latest updates and
-            exclusive offers.
+            <a
+              href="https://www.facebook.com/profile.php?id=61568083162096"
+              target="_blank"
+              style="
+                color: var(--text-gray);
+                text-decoration: none;
+                transition: color 0.3s ease;
+                display: block;
+                margin-bottom: 0.5rem;
+              "
+              onmouseover="this.style.color='var(--text-white)'"
+              onmouseout="this.style.color='var(--text-gray)'"
+              >Facebook</a
+            >
+            <a
+              href="https://www.instagram.com/eterno.mnl"
+              target="_blank"
+              style="
+                color: var(--text-gray);
+                text-decoration: none;
+                transition: color 0.3s ease;
+                display: block;
+                margin-bottom: 0.5rem;
+              "
+              onmouseover="this.style.color='var(--text-white)'"
+              onmouseout="this.style.color='var(--text-gray)'"
+              >Instagram</a
+            >
           </p>
         </div>
       </div>
@@ -679,9 +775,9 @@
       }
 
       function updateThemeButton(theme) {
-        const btn = document.getElementById("themeToggle");
-        if (btn) {
-          btn.textContent = theme === "light" ? "🌙 Dark" : "☀️ Light";
+        const icon = document.getElementById("themeIcon");
+        if (icon) {
+          icon.textContent = theme === "light" ? "☀️" : "🌙";
         }
       }
 

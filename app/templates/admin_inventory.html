@@ -151,6 +151,7 @@ endblock %} {% block extra_css %}
           <th>Category</th>
           <th>Price</th>
           <th>Stock</th>
+          <th>Order IDs</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -165,6 +166,16 @@ endblock %} {% block extra_css %}
             class="{% if product.stock == 0 %}stock-out{% elif product.stock < 10 %}stock-low{% endif %}"
           >
             {{ product.stock }}
+          </td>
+          <td>
+            <button
+              class="btn btn-small"
+              style="font-size: 0.7rem; padding: 0.3rem 0.6rem"
+              onclick="viewProductOrders({{ product.id }})"
+              title="View orders containing this product"
+            >
+              View Orders
+            </button>
           </td>
           <td>
             <div class="action-buttons">
@@ -228,13 +239,55 @@ endblock %} {% block extra_css %}
       </div>
 
       <div class="form-group">
-        <label>Image URL</label>
-        <input
-          type="text"
-          id="productImage"
-          placeholder="https://example.com/image.jpg"
-          oninput="updateImagePreview(this.value)"
-        />
+        <label>Product Image</label>
+        <div style="margin-bottom: 1rem">
+          <label
+            style="
+              display: block;
+              margin-bottom: 0.5rem;
+              font-size: 0.9rem;
+              color: var(--text-gray);
+            "
+            >Option 1: Upload Image</label
+          >
+          <input
+            type="file"
+            id="productImageFile"
+            accept="image/*"
+            onchange="handleImageUpload(this)"
+            style="
+              width: 100%;
+              padding: 0.8rem;
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid var(--border-color);
+              color: var(--text-white);
+            "
+          />
+        </div>
+        <div style="margin-bottom: 1rem">
+          <label
+            style="
+              display: block;
+              margin-bottom: 0.5rem;
+              font-size: 0.9rem;
+              color: var(--text-gray);
+            "
+            >Option 2: Image URL</label
+          >
+          <input
+            type="text"
+            id="productImage"
+            placeholder="https://example.com/image.jpg"
+            oninput="updateImagePreview(this.value)"
+            style="
+              width: 100%;
+              padding: 0.8rem;
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid var(--border-color);
+              color: var(--text-white);
+            "
+          />
+        </div>
         <div id="imagePreview" style="margin-top: 1rem; display: none">
           <img
             id="previewImg"
@@ -245,6 +298,7 @@ endblock %} {% block extra_css %}
               max-height: 200px;
               border: 1px solid var(--border-color);
               border-radius: 4px;
+              object-fit: cover;
             "
           />
         </div>
@@ -293,6 +347,31 @@ endblock %} {% block extra_css %}
     }
   }
 
+  function handleImageUpload(input) {
+    const file = input.files[0];
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        input.value = '';
+        return;
+      }
+
+      // Create a FileReader to preview the image
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewDiv = document.getElementById("imagePreview");
+        const previewImg = document.getElementById("previewImg");
+        previewImg.src = e.target.result;
+        previewDiv.style.display = "block";
+
+        // Clear the URL input since we're using file upload
+        document.getElementById("productImage").value = "";
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   function openEditModal(productId) {
     const product = productsDataById[productId];
     if (!product) {
@@ -310,6 +389,7 @@ endblock %} {% block extra_css %}
     document.getElementById("productStock").value = stock || 0;
     document.getElementById("productCategory").value = category || "";
     document.getElementById("productImage").value = image_url || "";
+    document.getElementById("productImageFile").value = "";
     updateImagePreview(image_url || "");
     document.getElementById("productModal").classList.add("active");
   }
@@ -319,6 +399,7 @@ endblock %} {% block extra_css %}
     document.getElementById("modalTitle").textContent = "ADD PRODUCT";
     document.getElementById("productForm").reset();
     document.getElementById("productId").value = "";
+    document.getElementById("productImageFile").value = "";
     document.getElementById("imagePreview").style.display = "none";
     document.getElementById("productModal").classList.add("active");
   }
@@ -332,13 +413,41 @@ endblock %} {% block extra_css %}
     .addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      const imageFile = document.getElementById("productImageFile").files[0];
+      const imageUrl = document.getElementById("productImage").value.trim();
+
+      // If file is uploaded, upload it first
+      let finalImageUrl = imageUrl;
+      if (imageFile) {
+        try {
+          const formData = new FormData();
+          formData.append('image', imageFile);
+
+          const uploadResponse = await fetch('/admin/products/upload-image', {
+            method: 'POST',
+            body: formData
+          });
+
+          const uploadData = await uploadResponse.json();
+          if (uploadData.success) {
+            finalImageUrl = uploadData.image_url;
+          } else {
+            alert('Error uploading image: ' + uploadData.error);
+            return;
+          }
+        } catch (error) {
+          alert('Error uploading image: ' + error.message);
+          return;
+        }
+      }
+
       const productData = {
         name: document.getElementById("productName").value,
         description: document.getElementById("productDescription").value,
         price: document.getElementById("productPrice").value,
         stock: document.getElementById("productStock").value,
         category: document.getElementById("productCategory").value,
-        image_url: document.getElementById("productImage").value,
+        image_url: finalImageUrl,
       };
 
       try {
@@ -414,5 +523,26 @@ endblock %} {% block extra_css %}
       closeModal();
     }
   });
+
+  // View orders containing a product
+  async function viewProductOrders(productId) {
+    try {
+      const response = await fetch(`/admin/products/${productId}/orders`);
+      const data = await response.json();
+      if (data.success) {
+        const orderIds = data.order_ids;
+        if (orderIds.length === 0) {
+          alert("This product has not been ordered yet.");
+        } else {
+          const orderList = orderIds.map(id => `#${id}`).join(", ");
+          alert(`Order IDs containing this product:\n${orderList}`);
+        }
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  }
 </script>
 {% endblock %}

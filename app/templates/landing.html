@@ -294,7 +294,9 @@
     {% endfor %}
   </div>
   <div style="text-align: center; margin-top: 3rem">
-    <a href="{{ url_for('customer.shop') }}" class="btn">VIEW ALL PRODUCTS</a>
+    <a href="{{ url_for('customer.shop') }}" class="btn" style="position: relative; overflow: hidden;">
+      <span style="position: relative; z-index: 1;">VIEW ALL PRODUCTS</span>
+    </a>
   </div>
 </section>
 {% endif %} {% endblock %}
