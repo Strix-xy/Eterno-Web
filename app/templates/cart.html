@@ -1,335 +1,5 @@
-{% extends "base.html" %} {% block title %}Cart - ETERNOS{% endblock %} {% block
-  extra_css %}
-  <style>
-    .cart-container {
-      padding: 2rem 5%;
-      max-width: 1400px;
-      margin: 0 auto;
-      min-height: calc(100vh - 100px);
-    }
-  
-    .cart-header {
-      font-family: "Cinzel", serif;
-      font-size: 3rem;
-      letter-spacing: 5px;
-      text-align: center;
-      margin-bottom: 3rem;
-      text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
-    }
-  
-    .cart-content {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 3rem;
-    }
-  
-    .cart-items {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-  
-    .cart-item {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      padding: 2rem;
-      display: grid;
-      grid-template-columns: 150px 1fr auto;
-      gap: 2rem;
-      align-items: center;
-      transition: all 0.3s ease;
-    }
-  
-    .cart-item:hover {
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    }
-  
-    .item-image {
-      width: 150px;
-      height: 150px;
-      background: rgba(255, 255, 255, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-  
-    .item-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  
-    .item-placeholder {
-      font-family: "Cinzel", serif;
-      font-size: 3rem;
-      color: rgba(255, 255, 255, 0.1);
-    }
-  
-    .item-details {
-      flex: 1;
-    }
-  
-    .item-name {
-      font-family: "Cinzel", serif;
-      font-size: 1.5rem;
-      letter-spacing: 2px;
-      margin-bottom: 0.5rem;
-    }
-  
-    .item-price {
-      color: var(--text-gray);
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-    }
-  
-    .item-controls {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-  
-    .qty-control {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--border-color);
-    }
-  
-    .qty-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-white);
-      font-size: 1.2rem;
-      cursor: pointer;
-      width: 30px;
-      height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-    }
-  
-    .qty-btn:hover {
-      color: var(--text-white);
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    }
-  
-    .qty-display {
-      font-size: 1.2rem;
-      min-width: 40px;
-      text-align: center;
-    }
-  
-    .item-actions {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 1rem;
-    }
-  
-    .item-total {
-      font-size: 1.8rem;
-      font-weight: 600;
-      text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-    }
-  
-    .remove-btn {
-      color: #ff4444;
-      background: transparent;
-      border: 1px solid #ff4444;
-      padding: 0.5rem 1.5rem;
-      cursor: pointer;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      transition: all 0.3s ease;
-    }
-  
-    .remove-btn:hover {
-      background: #ff4444;
-      color: white;
-      box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
-    }
-  
-    .cart-summary {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      padding: 2rem;
-      position: sticky;
-      top: 120px;
-      height: fit-content;
-    }
-  
-    .summary-title {
-      font-family: "Cinzel", serif;
-      font-size: 1.8rem;
-      letter-spacing: 3px;
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-  
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 1rem 0;
-      border-bottom: 1px solid var(--border-color);
-    }
-  
-    .summary-row:last-of-type {
-      border-bottom: 2px solid var(--border-color);
-      font-size: 1.3rem;
-      font-weight: 600;
-      padding: 1.5rem 0;
-      margin-bottom: 2rem;
-    }
-  
-    .summary-total {
-      font-size: 2rem;
-      text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-    }
-  
-    .payment-section {
-      margin-bottom: 1.5rem;
-      padding: 1.5rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-color);
-    }
-  
-    .payment-title {
-      font-family: "Cinzel", serif;
-      font-size: 1.2rem;
-      letter-spacing: 2px;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-  
-    .payment-options {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-    }
-  
-    .payment-option {
-      display: flex;
-      align-items: center;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-  
-    .payment-option:hover {
-      border-color: rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.05);
-    }
-  
-    .payment-option input[type="radio"] {
-      margin-right: 1rem;
-      cursor: pointer;
-    }
-  
-    .payment-option label {
-      cursor: pointer;
-      letter-spacing: 1px;
-      flex: 1;
-    }
-  
-    .payment-icon {
-      font-size: 1.5rem;
-      margin-left: 0.5rem;
-    }
-  
-    .checkout-btn {
-      width: 100%;
-      padding: 1.5rem;
-      background: transparent;
-      border: 1px solid var(--text-white);
-      color: var(--text-white);
-      font-size: 1rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-  
-    .checkout-btn::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: var(--text-white);
-      transition: left 0.3s ease;
-      z-index: -1;
-    }
-  
-    .checkout-btn:hover {
-      color: var(--bg-black);
-    }
-  
-    .checkout-btn:hover::before {
-      left: 0;
-    }
-  
-    .checkout-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  
-    .empty-cart-message {
-      text-align: center;
-      padding: 5rem 2rem;
-      grid-column: 1 / -1;
-    }
-  
-    .empty-cart-message h2 {
-      font-family: "Cinzel", serif;
-      font-size: 2rem;
-      letter-spacing: 3px;
-      margin-bottom: 1rem;
-      color: var(--text-gray);
-    }
-  
-    .empty-cart-message a {
-      display: inline-block;
-      margin-top: 2rem;
-    }
-  
-    @media (max-width: 1024px) {
-      .cart-content {
-        grid-template-columns: 1fr;
-      }
-  
-      .cart-summary {
-        position: relative;
-        top: 0;
-      }
-    }
-  
-    @media (max-width: 768px) {
-      .cart-item {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
-  
-      .item-controls {
-        justify-content: center;
-      }
-  
-      .item-actions {
-        align-items: center;
-      }
-    }
-  </style>
-  {% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}Cart - ETERNOS{% endblock %}
+{% block content %}
   <div class="cart-container">
     <h1 class="cart-header">YOUR CART</h1>
   
@@ -390,7 +60,7 @@
   
         <div class="summary-row" id="voucherDiscountRow" style="display: none;">
           <span>Voucher Discount:</span>
-          <span style="color: #4caf50;">-₱100.00</span>
+          <span class="voucher-discount-amount">-₱100.00</span>
         </div>
 
         <div class="summary-row">
@@ -405,24 +75,23 @@
   
         <div class="payment-section">
           <div class="payment-title">VOUCHER (OPTIONAL)</div>
-          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <div class="voucher-input-group">
             <input
               type="text"
               id="voucherCode"
               placeholder="Enter voucher code"
-              style="flex: 1; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white);"
+              class="voucher-input"
             />
             <button
-              class="btn"
-              style="padding: 0.8rem 1.5rem;"
+              class="btn voucher-apply-btn"
               onclick="applyVoucher()"
             >
               Apply
             </button>
           </div>
-          <div id="voucherApplied" style="display: none; color: #4caf50; margin-bottom: 1rem; font-size: 0.9rem;">
+          <div id="voucherApplied" class="voucher-applied">
             Voucher applied: -₱100
-            <button onclick="removeVoucher()" style="margin-left: 1rem; background: transparent; border: 1px solid #4caf50; color: #4caf50; padding: 0.3rem 0.8rem; cursor: pointer; font-size: 0.8rem; transition: all 0.3s ease;" onmouseover="this.style.background='#4caf50'; this.style.color='white'" onmouseout="this.style.background='transparent'; this.style.color='#4caf50'">Remove</button>
+            <button onclick="removeVoucher()" class="voucher-remove-btn">Remove</button>
           </div>
         </div>
 
@@ -460,99 +129,91 @@
             </div>
           </div>
           
-          <div id="paymentDetails" style="margin-top: 1rem; display: none;">
-            <div id="codDetails" style="display: none;">
-              <label style="display: block; margin-bottom: 0.5rem;">Delivery Address *</label>
+          <div id="paymentDetails" class="payment-details">
+            <div id="codDetails" class="payment-detail-section">
+              <label>Delivery Address *</label>
               <textarea
                 id="codAddress"
                 rows="3"
                 placeholder="Enter your complete delivery address"
-                style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white);"
                 required
               ></textarea>
             </div>
             
-            <div id="gcashDetails" style="display: none;">
-              <label style="display: block; margin-bottom: 0.5rem;">GCash Number *</label>
+            <div id="gcashDetails" class="payment-detail-section">
+              <label>GCash Number *</label>
               <input
                 type="tel"
                 id="gcashNumber"
                 placeholder="09XX XXX XXXX"
-                style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white); margin-bottom: 1rem;"
                 required
               />
-              <label style="display: block; margin-bottom: 0.5rem;">Account Name *</label>
+              <label>Account Name *</label>
               <input
                 type="text"
                 id="gcashAccountName"
                 placeholder="Enter account holder name"
-                style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white);"
                 required
               />
             </div>
             
-            <div id="cardDetails" style="display: none;">
-              <label style="display: block; margin-bottom: 0.5rem;">Card Type *</label>
-              <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <div class="payment-option" style="flex: 1; padding: 0.8rem;">
+            <div id="cardDetails" class="payment-detail-section">
+              <label>Card Type *</label>
+              <div class="card-type-options">
+                <div class="card-type-option payment-option">
                   <input type="radio" id="cardTypeCredit" name="cardType" value="credit" checked />
-                  <label for="cardTypeCredit" style="margin: 0; cursor: pointer;">Credit</label>
+                  <label for="cardTypeCredit">Credit</label>
                 </div>
-                <div class="payment-option" style="flex: 1; padding: 0.8rem;">
+                <div class="card-type-option payment-option">
                   <input type="radio" id="cardTypeDebit" name="cardType" value="debit" />
-                  <label for="cardTypeDebit" style="margin: 0; cursor: pointer;">Debit</label>
+                  <label for="cardTypeDebit">Debit</label>
                 </div>
               </div>
-              <label style="display: block; margin-bottom: 0.5rem;">Card Number *</label>
+              <label>Card Number *</label>
               <input
                 type="text"
                 id="cardNumber"
                 placeholder="1234 5678 9012 3456"
                 maxlength="19"
-                style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white); margin-bottom: 1rem;"
                 required
               />
-              <div style="display: flex; gap: 1rem;">
-                <div style="flex: 1;">
-                  <label style="display: block; margin-bottom: 0.5rem;">Expiry Date *</label>
+              <div class="card-fields-row">
+                <div>
+                  <label>Expiry Date *</label>
                   <input
                     type="text"
                     id="cardExpiry"
                     placeholder="MM/YY"
                     maxlength="5"
-                    style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white);"
                     required
                   />
                 </div>
-                <div style="flex: 1;">
-                  <label style="display: block; margin-bottom: 0.5rem;">CVV *</label>
+                <div>
+                  <label>CVV *</label>
                   <input
                     type="text"
                     id="cardCVV"
                     placeholder="123"
                     maxlength="4"
-                    style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white);"
                     required
                   />
                 </div>
               </div>
             </div>
             
-            <div id="paypalDetails" style="display: none;">
-              <label style="display: block; margin-bottom: 0.5rem;">PayPal Email *</label>
+            <div id="paypalDetails" class="payment-detail-section">
+              <label>PayPal Email *</label>
               <input
                 type="email"
                 id="paypalEmail"
                 placeholder="your.email@example.com"
-                style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white); margin-bottom: 1rem;"
                 required
               />
-              <label style="display: block; margin-bottom: 0.5rem;">PayPal Account Name *</label>
+              <label>PayPal Account Name *</label>
               <input
                 type="text"
                 id="paypalName"
                 placeholder="Account holder name"
-                style="width: 100%; padding: 0.8rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-white);"
                 required
               />
             </div>
@@ -577,269 +238,18 @@
   </div>
   {% endblock %} {% block extra_js %}
   <script>
-    async function updateQuantity(cartId, change) {
-      try {
-        const response = await fetch(`/cart/update/${cartId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ change: change }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          location.reload();
-        } else {
-          alert("Error: " + data.error);
-        }
-      } catch (error) {
-        alert("Error: " + error.message);
+    // Initialize baseSubtotal from the page
+    document.addEventListener("DOMContentLoaded", function() {
+      const totalDisplay = document.getElementById("totalDisplay");
+      if (totalDisplay) {
+        const totalText = totalDisplay.textContent.replace("₱", "").replace(",", "");
+        window.baseSubtotal = parseFloat(totalText) || 0; // Make global
       }
-    }
-
-    async function removeItem(cartId) {
-      if (!confirm("Remove this item from cart?")) {
-        return;
+      // Initialize payment details
+      if (document.getElementById("paymentDetails")) {
+        showPaymentDetails();
       }
-
-      try {
-        const response = await fetch(`/cart/remove/${cartId}`, {
-          method: "DELETE",
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          location.reload();
-        } else {
-          alert("Error: " + data.error);
-        }
-      } catch (error) {
-        alert("Error: " + error.message);
-      }
-    }
-  
-    let voucherApplied = false;
-    let baseSubtotal = {{ total_subtotal }};
-
-    function showPaymentDetails() {
-      const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
-      const paymentDetails = document.getElementById("paymentDetails");
-      const codDetails = document.getElementById("codDetails");
-      const gcashDetails = document.getElementById("gcashDetails");
-      const cardDetails = document.getElementById("cardDetails");
-      const paypalDetails = document.getElementById("paypalDetails");
-
-      // Hide all details first
-      codDetails.style.display = "none";
-      gcashDetails.style.display = "none";
-      cardDetails.style.display = "none";
-      paypalDetails.style.display = "none";
-
-      // Show relevant details
-      if (paymentMethod === "cod") {
-        paymentDetails.style.display = "block";
-        codDetails.style.display = "block";
-        document.getElementById("codAddress").required = true;
-      } else if (paymentMethod === "gcash") {
-        paymentDetails.style.display = "block";
-        gcashDetails.style.display = "block";
-        const gcashNumberInput = document.getElementById("gcashNumber");
-        const gcashAccountNameInput = document.getElementById("gcashAccountName");
-        if (gcashNumberInput) gcashNumberInput.required = true;
-        if (gcashAccountNameInput) gcashAccountNameInput.required = true;
-      } else if (paymentMethod === "credit_card") {
-        paymentDetails.style.display = "block";
-        cardDetails.style.display = "block";
-        document.getElementById("cardNumber").required = true;
-        document.getElementById("cardExpiry").required = true;
-        document.getElementById("cardCVV").required = true;
-      } else if (paymentMethod === "paypal") {
-        paymentDetails.style.display = "block";
-        paypalDetails.style.display = "block";
-        document.getElementById("paypalEmail").required = true;
-        document.getElementById("paypalName").required = true;
-      } else {
-        paymentDetails.style.display = "none";
-      }
-    }
-
-    function applyVoucher() {
-      const voucherCode = document.getElementById("voucherCode").value.trim();
-      if (voucherCode) {
-        // Simple voucher validation (can be enhanced)
-        voucherApplied = true;
-        document.getElementById("voucherApplied").style.display = "block";
-        updateTotal();
-      } else {
-        alert("Please enter a voucher code");
-      }
-    }
-
-    function removeVoucher() {
-      voucherApplied = false;
-      document.getElementById("voucherApplied").style.display = "none";
-      document.getElementById("voucherCode").value = "";
-      updateTotal();
-    }
-
-    function updateTotal() {
-      const voucherRow = document.getElementById("voucherDiscountRow");
-      const totalEl = document.getElementById("totalDisplay");
-      let subtotal = baseSubtotal;
-      let discount = voucherApplied ? 100 : 0;
-      let total = subtotal - discount;
-      
-      if (voucherApplied) {
-        voucherRow.style.display = "flex";
-      } else {
-        voucherRow.style.display = "none";
-      }
-      
-      if (totalEl) {
-        totalEl.textContent = `₱${total.toFixed(2)}`;
-      }
-    }
-
-    function checkoutBtnHandler(btn) {
-      const paymentMethod = document.querySelector('input[name="payment"]:checked');
-      if (!paymentMethod) {
-        alert("Please select a payment method");
-        return;
-      }
-
-      const paymentValue = paymentMethod.value;
-      let paymentDetails = {};
-
-      // Collect payment details based on method
-      if (paymentValue === "cod") {
-        const address = document.getElementById("codAddress").value.trim();
-        if (!address) {
-          alert("Please enter your delivery address");
-          return;
-        }
-        paymentDetails.address = address;
-      } else if (paymentValue === "gcash") {
-        const gcashNumber = document.getElementById("gcashNumber").value.trim();
-        const gcashAccountName = document.getElementById("gcashAccountName").value.trim();
-        if (!gcashNumber) {
-          alert("Please enter your GCash number");
-          return;
-        }
-        if (!gcashAccountName) {
-          alert("Please enter your GCash account name");
-          return;
-        }
-        paymentDetails.gcash_number = gcashNumber;
-        paymentDetails.gcash_account_name = gcashAccountName;
-      } else if (paymentValue === "credit_card") {
-        const cardType = document.querySelector('input[name="cardType"]:checked').value;
-        const cardNumber = document.getElementById("cardNumber").value.trim();
-        const cardExpiry = document.getElementById("cardExpiry").value.trim();
-        const cardCVV = document.getElementById("cardCVV").value.trim();
-        if (!cardNumber || !cardExpiry || !cardCVV) {
-          alert("Please fill in all card details");
-          return;
-        }
-        paymentDetails.card_type = cardType;
-        paymentDetails.card_number = cardNumber;
-        paymentDetails.card_expiry = cardExpiry;
-        paymentDetails.card_cvv = cardCVV;
-      } else if (paymentValue === "paypal") {
-        const paypalEmail = document.getElementById("paypalEmail").value.trim();
-        const paypalName = document.getElementById("paypalName").value.trim();
-        if (!paypalEmail || !paypalName) {
-          alert("Please fill in all PayPal details");
-          return;
-        }
-        paymentDetails.paypal_email = paypalEmail;
-        paymentDetails.paypal_name = paypalName;
-      }
-
-      // Show confirmation summary
-      showConfirmationSummary(paymentValue, paymentDetails);
-    }
-
-    function showConfirmationSummary(paymentMethod, paymentDetails) {
-      const subtotal = baseSubtotal;
-      const discount = voucherApplied ? 100 : 0;
-      const deliveryFee = 50 + Math.floor(Math.random() * 51); // Random between 50-100
-      const total = subtotal - discount + deliveryFee;
-
-      let summary = `ORDER CONFIRMATION\n\n`;
-      summary += `Subtotal: ₱${subtotal.toFixed(2)}\n`;
-      if (discount > 0) {
-        summary += `Voucher Discount: -₱${discount.toFixed(2)}\n`;
-      }
-      summary += `Delivery Fee: ₱${deliveryFee.toFixed(2)}\n`;
-      summary += `Total: ₱${total.toFixed(2)}\n\n`;
-      summary += `Payment Method: ${paymentMethod.toUpperCase()}\n`;
-      
-      if (paymentMethod === "cod") {
-        summary += `Delivery Address: ${paymentDetails.address}\n`;
-      } else if (paymentMethod === "gcash") {
-        summary += `GCash Number: ${paymentDetails.gcash_number}\n`;
-        summary += `Account Name: ${paymentDetails.gcash_account_name}\n`;
-      } else if (paymentMethod === "credit_card") {
-        summary += `Card Type: ${paymentDetails.card_type.toUpperCase()}\n`;
-        summary += `Card: ****${paymentDetails.card_number.slice(-4)}\n`;
-      } else if (paymentMethod === "paypal") {
-        summary += `PayPal: ${paymentDetails.paypal_email}\n`;
-      }
-
-      if (confirm(summary + "\n\nConfirm order?")) {
-        proceedCheckout(paymentMethod, paymentDetails, deliveryFee);
-      }
-    }
-
-    async function proceedCheckout(paymentMethod, paymentDetails, deliveryFee) {
-      try {
-        const subtotal = baseSubtotal;
-        const discount = voucherApplied ? 100 : 0;
-        const total = subtotal - discount + deliveryFee;
-
-        const response = await fetch("/checkout", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            payment_method: paymentMethod,
-            customer_address: paymentDetails.address || "",
-            gcash_number: paymentDetails.gcash_number || "",
-            gcash_account_name: paymentDetails.gcash_account_name || "",
-            card_type: paymentDetails.card_type || "",
-            card_number: paymentDetails.card_number || "",
-            card_expiry: paymentDetails.card_expiry || "",
-            card_cvv: paymentDetails.card_cvv || "",
-            paypal_email: paymentDetails.paypal_email || "",
-            paypal_name: paymentDetails.paypal_name || "",
-            voucher_applied: voucherApplied,
-            delivery_fee: deliveryFee,
-            total: total,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          alert("Order placed successfully! Generating receipt...");
-          window.open(`/receipt/${data.order_id}`, "_blank");
-          window.location.href = "/shop";
-        } else {
-          alert("Error: " + data.error);
-        }
-      } catch (error) {
-        alert("Error: " + error.message);
-      }
-    }
-
-    // Initialize payment details on page load
-    window.onload = function() {
-      showPaymentDetails();
-    };
+    });
   </script>
   {% endblock %}
   

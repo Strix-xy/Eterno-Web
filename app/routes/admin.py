@@ -288,21 +288,57 @@ def delete_product(product_id):
 
 @admin_bp.route('/orders')
 def get_orders():
-    """Get all orders for admin dashboard"""
+    """Get all orders for admin dashboard with pagination support"""
     if session.get('role') != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
     
     try:
-        # Get all orders from both Order and Sale models
-        orders = Order.query.order_by(Order.created_at.desc()).all()
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 100, type=int)  # Default 100 orders per page
+        limit = request.args.get('limit', None, type=int)  # Optional hard limit
         
-        # Convert to list of dictionaries
-        orders_list = [order.to_dict() for order in orders]
+        # Build query
+        query = Order.query.order_by(Order.created_at.desc())
         
-        return jsonify({
-            'success': True,
-            'orders': orders_list
-        })
+        # Apply limit if specified (for initial load, show recent orders)
+        if limit:
+            # Get total count first (for info display)
+            total_count = Order.query.count()
+            # Apply limit and get orders
+            orders = query.limit(limit).all()
+            orders_list = [order.to_dict() for order in orders]
+            
+            return jsonify({
+                'success': True,
+                'orders': orders_list,
+                'total': total_count
+            })
+        else:
+            # Use pagination
+            pagination = query.paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+            orders = pagination.items
+            total_orders = pagination.total
+            
+            # Convert to list of dictionaries
+            orders_list = [order.to_dict() for order in orders]
+            
+            return jsonify({
+                'success': True,
+                'orders': orders_list,
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': total_orders,
+                    'pages': pagination.pages,
+                    'has_next': pagination.has_next,
+                    'has_prev': pagination.has_prev
+                }
+            })
     
     except Exception as e:
         return jsonify({'error': 'Failed to fetch orders'}), 500
