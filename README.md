@@ -1,4 +1,4 @@
-# ✨ Eterno Web
+# Eterno Web
 
 <div align="center">
 
@@ -6,32 +6,33 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
 **A minimalist clothing shop portfolio project built with Flask**
 
-[View Demo](#) • [Report Bug](../../issues) • [Request Feature](../../issues)
+[View Demo](#) │ [Report Bug](../../issues) │ [Request Feature](../../issues)
 
 </div>
 
 ---
 
-## 🎯 About The Project
+## ─── About The Project
 
 **Eterno** is a sleek, modern web-based clothing shop concept that demonstrates clean design principles and Flask backend integration. This portfolio project showcases how to build a structured, navigable web application with smooth routing and aesthetic appeal.
 
 > 💡 **Note:** This is a conceptual demonstration project - not a full e-commerce platform, but a showcase of web development fundamentals and design sensibility.
 
-### ✨ Key Highlights
+### ─── Key Highlights
 
-- 🎨 **Minimalist Design** - Clean, responsive interface that puts content first
-- ⚡ **Flask-Powered** - Lightweight Python backend with efficient routing
-- 📱 **Fully Responsive** - Seamless experience across all devices
-- 🎯 **Portfolio Ready** - Demonstrates real-world web development skills
-- 🔧 **Easy to Extend** - Structured architecture ready for additional features
+- ▸ **Minimalist Design** - Clean, responsive interface that puts content first
+- ▸ **Flask-Powered** - Lightweight Python backend with efficient routing
+- ▸ **Fully Responsive** - Seamless experience across all devices
+- ▸ **Portfolio Ready** - Demonstrates real-world web development skills
+- ▸ **Easy to Extend** - Structured architecture ready for additional features
 
 ---
 
-## 🚀 Features
+## ─── Features
 
 ### Current Capabilities
 
@@ -41,7 +42,7 @@
 - **Responsive Layout** - Adapts beautifully to desktop, tablet, and mobile screens
 - **Organized Structure** - Well-architected codebase following best practices
 
-### 🔮 Future Enhancements
+### ─── Future Enhancements
 
 - Product database integration
 - Shopping cart functionality
@@ -52,11 +53,12 @@
 
 ---
 
-## 🛠️ Built With
+## ─── Built With
 
 ### Frontend
 - **HTML5** - Semantic markup and structure
 - **CSS3** - Modern styling with responsive design
+- **JavaScript** - Interactive functionality and dynamic content
 
 ### Backend
 - **Flask** - Micro web framework for Python
@@ -68,7 +70,7 @@
 
 ---
 
-## 📦 Installation
+## ─── Installation
 
 ### Prerequisites
 
@@ -107,7 +109,7 @@
 
 ---
 
-## 📁 Project Structure
+## ─── Project Structure
 
 ```
 Eterno-Web/
@@ -125,7 +127,7 @@ Eterno-Web/
 
 ---
 
-## 🎨 Design Philosophy
+## ─── Design Philosophy
 
 Eterno embraces a **minimalist aesthetic** that prioritizes:
 
@@ -136,7 +138,7 @@ Eterno embraces a **minimalist aesthetic** that prioritizes:
 
 ---
 
-## 🤝 Contributing
+## ─── Contributing
 
 Contributions are what make the open-source community amazing! Any contributions you make are **greatly appreciated**.
 
@@ -148,13 +150,13 @@ Contributions are what make the open-source community amazing! Any contributions
 
 ---
 
-## 📝 License
+## ─── License
 
 This project is created for **portfolio and educational purposes**.
 
 ---
 
-## 📧 Contact
+## ─── Contact
 
 **Strix** - [@Strix-xy](https://github.com/Strix-xy)
 
@@ -162,7 +164,7 @@ Project Link: [https://github.com/Strix-xy/Eterno-Web](https://github.com/Strix-
 
 ---
 
-## 🌟 Acknowledgments
+## ─── Acknowledgments
 
 - Flask documentation and community
 - Design inspiration from modern e-commerce platforms
@@ -174,6 +176,6 @@ Project Link: [https://github.com/Strix-xy/Eterno-Web](https://github.com/Strix-
 
 **⭐ Star this repo if you find it useful! ⭐**
 
-Made with ❤️ by [Strix](https://github.com/Strix-xy)
+Made by [Strix](https://github.com/Strix-xy)
 
 </div>
