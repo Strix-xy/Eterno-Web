@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}ETERNO{% endblock %}</title>
+    <script>
+      (function () {
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+      })();
+    </script>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/styles.css') }}"
@@ -11,17 +17,17 @@
     {% block extra_css %}{% endblock %}
   </head>
   <body>
-    <!-- Main Navigation Bar -->
     <nav>
       <div class="logo-section">
-        <div class="logo">ETERNO</div>
+        <a href="{{ url_for('main.index') }}" class="logo-link">
+          <div class="logo">ETERNO</div>
+        </a>
       </div>
 
-      <!-- Dynamic navigation based on user role -->
       <div class="nav-wrapper">
         <ul class="nav-links">
           {% if session.role == 'admin' %}
-          <!-- Admin-specific links -->
+          <li><a href="{{ url_for('main.index') }}">Home</a></li>
           <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
           <li><a href="{{ url_for('admin.pos') }}">POS</a></li>
           <li><a href="{{ url_for('admin.inventory') }}">Inventory</a></li>
@@ -35,7 +41,7 @@
             >
           </li>
           {% elif session.user_id %}
-          <!-- Customer links when logged in -->
+          <li><a href="{{ url_for('main.index') }}">Home</a></li>
           <li><a href="{{ url_for('customer.shop') }}">Shop</a></li>
           <li><a href="{{ url_for('customer.about') }}">About</a></li>
           <li><a href="{{ url_for('customer.cart') }}">Cart</a></li>
@@ -49,7 +55,6 @@
             >
           </li>
           {% else %}
-          <!-- Guest links -->
           <li><a href="{{ url_for('main.index') }}">Home</a></li>
           <li><a href="{{ url_for('customer.about') }}">About</a></li>
           <li><a href="{{ url_for('auth.login') }}">Login</a></li>
@@ -61,16 +66,27 @@
           onclick="toggleTheme()"
           id="themeToggle"
           title="Toggle theme"
+          aria-label="Toggle theme"
         >
-          <span id="themeIcon">🌙</span>
+          <svg
+            id="themeIcon"
+            class="theme-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <path
+              d="M12 1v3m0 16v3M5.64 5.64l2.12 2.12m8.48 8.48l2.12 2.12M1 12h3m16 0h3M5.64 18.36l2.12-2.12m8.48-8.48l2.12-2.12"
+            />
+          </svg>
         </button>
       </div>
     </nav>
 
-    <!-- Main content area -->
     <main>{% block content %}{% endblock %}</main>
 
-    <!-- Floating cart button for customers -->
     {% if session.user_id and session.role != 'admin' %}
     <a
       href="{{ url_for('customer.cart') }}"
@@ -82,8 +98,14 @@
     </a>
     {% endif %}
 
-    <!-- Footer section -->
     <footer>
+      <div class="footer-logo-section">
+        <img
+          src="{{ url_for('static', filename='images/eterno-logo.png') }}"
+          alt="ETERNO Logo"
+          class="footer-logo"
+        />
+      </div>
       <div class="footer-grid">
         <div class="footer-section">
           <h3>ETERNO</h3>
@@ -155,7 +177,6 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-      // Make logout URL available to JavaScript
       document.addEventListener("DOMContentLoaded", function () {
         const logoutLinks = document.querySelectorAll("#logoutUrl");
         logoutLinks.forEach((link) => {

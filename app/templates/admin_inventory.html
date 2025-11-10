@@ -26,7 +26,7 @@ endblock %} {% block content %}
           <td>{{ product.category or 'Uncategorized' }}</td>
           <td>₱{{ "%.2f"|format(product.price) }}</td>
           <td
-            class="{% if product.stock == 0 %}stock-out{% elif product.stock < 10 %}stock-low{% endif %}"
+            class="{% if product.stock == 0 %}stock-out{% elif product.stock <= 5 %}stock-low{% endif %}"
           >
             {{ product.stock }}
           </td>

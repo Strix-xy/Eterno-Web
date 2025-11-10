@@ -1,7 +1,13 @@
 {% extends "base.html" %} {% block title %}ETERNO - Timeless Fashion{% endblock
 %} {% block content %}
-<!-- Hero section with dramatic background -->
 <section class="hero">
+  <div class="hero-logo-decoration">
+    <img
+      src="{{ url_for('static', filename='images/eterno-logo.png') }}"
+      alt="ETERNO Logo"
+      class="hero-logo"
+    />
+  </div>
   <div class="hero-content">
     <h1>ETERNO</h1>
     <p>Where Style Transcends Time</p>
@@ -10,6 +16,46 @@
         >Explore Collection</a
       >
       <a href="{{ url_for('customer.about') }}" class="btn">Our Story</a>
+    </div>
+  </div>
+</section>
+
+<section class="promo-banner">
+  <div class="promo-banner-content">
+    <img
+      src="{{ url_for('static', filename='images/sale-promo.jpg') }}"
+      alt="ETERNO Sale"
+      class="promo-image"
+    />
+    <div class="promo-overlay">
+      <h2>LIMITED STOCKS</h2>
+      <p>THE WAIT IS ALMOST OVER</p>
+      <a href="{{ url_for('customer.shop') }}" class="btn">SHOP NOW</a>
+    </div>
+  </div>
+</section>
+
+<section class="lifestyle-showcase">
+  <div class="lifestyle-grid">
+    <div class="lifestyle-item">
+      <img
+        src="{{ url_for('static', filename='images/lifestyle-model.png') }}"
+        alt="ETERNO Lifestyle"
+      />
+      <div class="lifestyle-overlay">
+        <h3>STREETWEAR</h3>
+        <p>Urban Elegance</p>
+      </div>
+    </div>
+    <div class="lifestyle-item">
+      <img
+        src="{{ url_for('static', filename='images/group-photo.jpg') }}"
+        alt="ETERNO Community"
+      />
+      <div class="lifestyle-overlay">
+        <h3>COMMUNITY</h3>
+        <p>Join The Movement</p>
+      </div>
     </div>
   </div>
 </section>

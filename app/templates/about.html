@@ -1,6 +1,13 @@
 {% extends "base.html" %} {% block title %}About - ETERNOS{% endblock %} {%
 block content %}
 <div class="about-hero">
+  <div class="about-hero-logo">
+    <img
+      src="{{ url_for('static', filename='images/eterno-logo.png') }}"
+      alt="ETERNO Logo"
+      class="about-logo-decoration"
+    />
+  </div>
   <h1>ABOUT US</h1>
   <p>The Story Behind The Shadow</p>
 </div>
@@ -8,6 +15,36 @@ block content %}
 <div class="about-content">
   <div class="about-section">
     <h2>OUR PHILOSOPHY</h2>
+    <div class="philosophy-gallery">
+      <div class="philosophy-image">
+        <img
+          src="{{ url_for('static', filename='images/lifestyle-model.png') }}"
+          alt="ETERNO Philosophy"
+          class="about-image"
+        />
+      </div>
+      <div class="philosophy-image">
+        <img
+          src="{{ url_for('static', filename='images/philosophy-model-1.png') }}"
+          alt="ETERNO Philosophy"
+          class="about-image"
+        />
+      </div>
+      <div class="philosophy-image">
+        <img
+          src="{{ url_for('static', filename='images/philosophy-model-2.png') }}"
+          alt="ETERNO Philosophy"
+          class="about-image"
+        />
+      </div>
+      <div class="philosophy-image">
+        <img
+          src="{{ url_for('static', filename='images/philosophy-model-3.png') }}"
+          alt="ETERNO Philosophy"
+          class="about-image"
+        />
+      </div>
+    </div>
     <p class="about-text">
       ETERNOS was born from the belief that true style transcends time. In a
       world of fleeting trends, we create garments that embody permanence,
@@ -19,6 +56,20 @@ block content %}
 
   <div class="story-section">
     <h2>THE ETERNAL VISION</h2>
+    <div class="vision-gallery">
+      <div class="vision-image">
+        <img
+          src="{{ url_for('static', filename='images/santa-graffiti.jpg') }}"
+          alt="ETERNO Vision"
+        />
+      </div>
+      <div class="vision-image">
+        <img
+          src="{{ url_for('static', filename='images/pope-lamborghini.jpg') }}"
+          alt="ETERNO Vision"
+        />
+      </div>
+    </div>
     <p class="about-text">
       Founded in the shadows of conventional fashion, ETERNOS emerged as a
       sanctuary for those seeking something deeper than mere clothing. We blend

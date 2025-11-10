@@ -1,5 +1,13 @@
 {% extends "base.html" %} {% block title %}Shop - ETERNOS{% endblock %} {% block
 content %}
+<div class="shop-promo-section">
+  <img
+    src="{{ url_for('static', filename='images/limited-stocks.jpg') }}"
+    alt="Limited Stocks"
+    class="shop-promo-banner"
+  />
+</div>
+
 <div class="shop-container">
   <div class="shop-header">
     <h1>COLLECTION</h1>

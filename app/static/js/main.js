@@ -1,15 +1,9 @@
-// ============================================
-// BASE TEMPLATE JAVASCRIPT
-// ============================================
-
-// Update cart count on page load
 document.addEventListener("DOMContentLoaded", function() {
   if (document.getElementById("cartCount")) {
     updateCartCount();
   }
 });
 
-// Function to fetch and display cart item count
 async function updateCartCount() {
   try {
     const response = await fetch("/cart/count");
@@ -22,11 +16,9 @@ async function updateCartCount() {
       countEl.style.display = "none";
     }
   } catch (error) {
-    // Silently fail - cart count is not critical
   }
 }
 
-// Logout confirmation
 function confirmLogout() {
   if (confirm("Are you sure you want to logout?")) {
     const logoutLink = document.querySelector("#logoutUrl");
@@ -35,7 +27,6 @@ function confirmLogout() {
   }
 }
 
-// Theme toggle
 function toggleTheme() {
   const currentTheme = document.documentElement.getAttribute("data-theme");
   const newTheme = currentTheme === "light" ? "dark" : "light";
@@ -47,20 +38,19 @@ function toggleTheme() {
 function updateThemeButton(theme) {
   const icon = document.getElementById("themeIcon");
   if (icon) {
-    icon.textContent = theme === "light" ? "☀️" : "🌙";
+    if (theme === "light") {
+      icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    } else {
+      icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v3m0 16v3M5.64 5.64l2.12 2.12m8.48 8.48l2.12 2.12M1 12h3m16 0h3M5.64 18.36l2.12-2.12m8.48-8.48l2.12-2.12"/>';
+    }
   }
 }
 
-// Load saved theme
 window.addEventListener("DOMContentLoaded", function () {
   const savedTheme = localStorage.getItem("theme") || "dark";
   document.documentElement.setAttribute("data-theme", savedTheme);
   updateThemeButton(savedTheme);
 });
-
-// ============================================
-// CART PAGE JAVASCRIPT
-// ============================================
 
 async function updateQuantity(cartId, change) {
   try {
@@ -106,7 +96,6 @@ async function removeItem(cartId) {
   }
 }
 
-// Global variables for cart functionality
 window.voucherApplied = false;
 window.baseSubtotal = 0;
 
@@ -121,13 +110,10 @@ function showPaymentDetails() {
   const cardDetails = document.getElementById("cardDetails");
   const paypalDetails = document.getElementById("paypalDetails");
 
-  // Hide all details first
   if (codDetails) codDetails.classList.remove("show");
   if (gcashDetails) gcashDetails.classList.remove("show");
   if (cardDetails) cardDetails.classList.remove("show");
   if (paypalDetails) paypalDetails.classList.remove("show");
-
-  // Show relevant details
   if (paymentValue === "cod") {
     if (paymentDetails) paymentDetails.style.display = "block";
     if (codDetails) codDetails.classList.add("show");
@@ -167,7 +153,6 @@ function applyVoucher() {
   
   const code = voucherCode.value.trim();
   if (code) {
-    // Simple voucher validation (can be enhanced)
     window.voucherApplied = true;
     const voucherAppliedEl = document.getElementById("voucherApplied");
     if (voucherAppliedEl) voucherAppliedEl.style.display = "block";
@@ -214,7 +199,6 @@ function checkoutBtnHandler(btn) {
   const paymentValue = paymentMethod.value;
   let paymentDetails = {};
 
-  // Collect payment details based on method
   if (paymentValue === "cod") {
     const address = document.getElementById("codAddress");
     if (!address || !address.value.trim()) {
@@ -337,18 +321,12 @@ async function proceedCheckout(paymentMethod, paymentDetails, deliveryFee) {
   }
 }
 
-// Initialize payment details on page load
 window.addEventListener("load", function() {
   if (document.getElementById("paymentDetails")) {
     showPaymentDetails();
   }
 });
 
-// ============================================
-// SHOP PAGE JAVASCRIPT
-// ============================================
-
-// Filter functionality
 document.addEventListener("DOMContentLoaded", function() {
   const filterButtons = document.querySelectorAll(".filter-btn");
   const productCards = document.querySelectorAll(".product-card");
@@ -357,11 +335,9 @@ document.addEventListener("DOMContentLoaded", function() {
     btn.addEventListener("click", () => {
       const category = btn.dataset.category;
 
-      // Update active button
       filterButtons.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
 
-      // Filter products
       productCards.forEach((card) => {
         if (category === "all" || card.dataset.category === category) {
           card.style.display = "block";
@@ -372,8 +348,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 });
-
-// Add to cart (Shop page)
 async function addToCartShop(productId) {
   try {
     const response = await fetch("/cart/add", {
@@ -411,7 +385,6 @@ async function addToCartShop(productId) {
 function showNotification(message, type = "success") {
   let notification = document.getElementById("notification");
   
-  // Create notification element if it doesn't exist
   if (!notification) {
     notification = document.createElement("div");
     notification.id = "notification";
@@ -428,10 +401,6 @@ function showNotification(message, type = "success") {
   }, 3000);
 }
 
-// ============================================
-// ADMIN DASHBOARD JAVASCRIPT
-// ============================================
-
 let currentFilter = "all";
 let allOrders = [];
 
@@ -442,20 +411,16 @@ async function viewOrders() {
   if (modal) modal.classList.add("active");
   
   try {
-    // Load most recent 200 orders for faster initial load
     const response = await fetch("/admin/orders?limit=200");
     const data = await response.json();
     if (data.success) {
       allOrders = data.orders;
       displayOrders(allOrders);
       
-      // Show message if there are more orders (after table is rendered)
       if (data.total && data.total > 200) {
-        // Remove any existing info message
         const existingMsg = container.querySelector(".orders-info-message");
         if (existingMsg) existingMsg.remove();
         
-        // Add new info message
         const infoMsg = document.createElement("div");
         infoMsg.className = "orders-info-message";
         infoMsg.style.cssText = "text-align: center; padding: 1rem; margin-top: 1rem; color: var(--text-gray); font-size: 0.9rem; border-top: 1px solid var(--border-color);";
@@ -486,7 +451,6 @@ function filterOrders(filter, button) {
   if (button) {
     button.classList.add("active");
   } else {
-    // If no button provided, find and activate the correct one
     const buttons = document.querySelectorAll(".filter-btn");
     buttons.forEach((btn) => {
       if (btn.textContent.trim().includes(filter.toUpperCase())) {
@@ -579,7 +543,6 @@ function displayOrderDetails(order) {
   try {
     items = JSON.parse(order.items || "[]");
   } catch (e) {
-    // If parsing fails, default to empty array
     items = [];
   }
 
@@ -688,7 +651,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
-// Products Modal Functions
 async function viewProducts() {
   const modal = document.getElementById("productsModal");
   const container = document.getElementById("productsListContainer");
@@ -883,17 +845,14 @@ async function updateOrderStatus(orderId, newStatus) {
     const data = await response.json();
 
     if (data.success) {
-      // Update local orders array
       const orderIndex = allOrders.findIndex((o) => o.id === orderId);
       if (orderIndex !== -1) {
         allOrders[orderIndex].status = newStatus;
       }
-      // Refresh display
       filterOrders(currentFilter, null);
       showNotification("Order status updated successfully!");
     } else {
       showNotification("Error: " + data.error, "error");
-      // Reload to reset
       try {
         const response = await fetch("/admin/orders");
         const data = await response.json();
@@ -902,12 +861,10 @@ async function updateOrderStatus(orderId, newStatus) {
           filterOrders(currentFilter, null);
         }
       } catch (error) {
-        // Silently fail
       }
     }
   } catch (error) {
     showNotification("Error: " + error.message, "error");
-    // Reload to reset
     try {
       const response = await fetch("/admin/orders");
       const data = await response.json();
@@ -916,12 +873,10 @@ async function updateOrderStatus(orderId, newStatus) {
         filterOrders(currentFilter, null);
       }
     } catch (err) {
-      // Silently fail
     }
   }
 }
 
-// Close modals when clicking outside
 document.addEventListener("DOMContentLoaded", function() {
   const productsModal = document.getElementById("productsModal");
   if (productsModal) {
@@ -941,12 +896,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
-
-// ============================================
-// ADMIN INVENTORY JAVASCRIPT
-// ============================================
-
-// isEditMode is defined in admin_inventory.html template
 
 function updateImagePreview(url) {
   const previewDiv = document.getElementById("imagePreview");
@@ -970,14 +919,12 @@ function updateImagePreview(url) {
 function handleImageUpload(input) {
   const file = input.files[0];
   if (file) {
-    // Check if file is an image
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file');
       input.value = '';
       return;
     }
 
-    // Create a FileReader to preview the image
     const reader = new FileReader();
     reader.onload = function(e) {
       const previewDiv = document.getElementById("imagePreview");
@@ -989,7 +936,6 @@ function handleImageUpload(input) {
         previewDiv.style.display = "block";
       }
 
-      // Clear the URL input since we're using file upload
       const urlInput = document.getElementById("productImage");
       if (urlInput) urlInput.value = "";
     };
@@ -998,7 +944,6 @@ function handleImageUpload(input) {
 }
 
 function openEditModal(productId) {
-  // This function needs access to productsDataById which is defined in the template
   const productsDataById = window.productsDataById || {};
   
   const product = productsDataById[productId];
@@ -1074,7 +1019,6 @@ document.addEventListener("DOMContentLoaded", function() {
       const imageFile = imageFileInput ? imageFileInput.files[0] : null;
       const imageUrl = imageUrlInput ? imageUrlInput.value.trim() : "";
 
-      // If file is uploaded, upload it first
       let finalImageUrl = imageUrl;
       if (imageFile) {
         try {
@@ -1196,7 +1140,6 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
-// View orders containing a product
 async function viewProductOrders(productId) {
   try {
     const response = await fetch(`/admin/products/${productId}/orders`);
@@ -1249,15 +1192,12 @@ function addToPosCart(productId, productName, productPrice, stock) {
   renderPosCart();
 }
 
-// Unified addToCart function that handles both shop and POS
 async function addToCart(productId, productName, productPrice, stock) {
-  // If 4 parameters, it's POS page
   if (arguments.length === 4 && productName !== undefined) {
     addToPosCart(productId, productName, productPrice, stock);
     return;
   }
   
-  // Otherwise, it's the shop page (1 parameter)
   await addToCartShop(productId);
 }
 
@@ -1282,7 +1222,6 @@ function removeFromPosCart(productId) {
 }
 
 function clearCart() {
-  // Check if we're on POS page
   const cartItemsDiv = document.getElementById("cartItems");
   if (!cartItemsDiv) {
     return;
@@ -1351,7 +1290,6 @@ function renderPosCart() {
   cartItemsDiv.innerHTML = html;
   subtotalAmountSpan.textContent = `₱${subtotal.toFixed(2)}`;
 
-  // Apply discount
   let total = subtotal - window.posCurrentDiscount.amount;
   if (total < 0) total = 0;
 
