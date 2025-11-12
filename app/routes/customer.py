@@ -206,6 +206,10 @@ def checkout():
         customer_address = sanitize_string(data.get('customer_address', ''))
         voucher_applied = data.get('voucher_applied', False)
         delivery_fee = data.get('delivery_fee', 0)
+
+        # Require delivery address for all payment methods
+        if not customer_address:
+            return jsonify({'error': 'Delivery address is required for checkout'}), 400
         
         # Validate payment method
         valid_methods = ['cod', 'gcash', 'credit_card', 'paypal']
@@ -277,7 +281,7 @@ def checkout():
             user_id=session['user_id'],
             customer_name=user.username,
             customer_email=user.email,
-            customer_address=customer_address if customer_address else None,
+            customer_address=customer_address,
             subtotal=subtotal + discount_amount,  # Store original subtotal before discount
             shipping_fee=delivery_fee,
             total_amount=total_amount,

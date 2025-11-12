@@ -3,7 +3,9 @@ ETERNO E-Commerce Platform - Database Models
 All SQLAlchemy models with optimized relationships and indexes
 """
 from datetime import datetime
+import json
 from app import db
+from app.utils.helpers import format_datetime_sg, isoformat_datetime_sg
 
 class User(db.Model):
     """User model for customer and admin accounts"""
@@ -35,7 +37,8 @@ class User(db.Model):
             'username': self.username,
             'email': self.email,
             'role': self.role,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'created_at': isoformat_datetime_sg(self.created_at),
+            'created_at_display': format_datetime_sg(self.created_at)
         }
 
 
@@ -79,7 +82,8 @@ class Product(db.Model):
             'stock': self.stock,
             'category': self.category,
             'image_url': self.image_url,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
+            'created_at': isoformat_datetime_sg(self.created_at),
+            'created_at_display': format_datetime_sg(self.created_at) if self.created_at else None
         }
 
 
@@ -101,6 +105,16 @@ class Sale(db.Model):
     
     def to_dict(self):
         """Convert sale to dictionary"""
+        try:
+            items_data = json.loads(self.items or '[]')
+        except (TypeError, json.JSONDecodeError):
+            items_data = []
+        
+        subtotal = sum(
+            float(item.get('price', 0)) * int(item.get('quantity', 0))
+            for item in items_data
+        )
+        
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -109,7 +123,10 @@ class Sale(db.Model):
             'discount_type': self.discount_type,
             'discount_amount': self.discount_amount,
             'items': self.items,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'items_data': items_data,
+            'subtotal': subtotal,
+            'created_at': isoformat_datetime_sg(self.created_at),
+            'created_at_display': format_datetime_sg(self.created_at)
         }
 
 
@@ -170,6 +187,11 @@ class Order(db.Model):
     
     def to_dict(self):
         """Convert order to dictionary"""
+        try:
+            items_data = json.loads(self.items or '[]')
+        except (TypeError, json.JSONDecodeError):
+            items_data = []
+        
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -182,5 +204,27 @@ class Order(db.Model):
             'payment_method': self.payment_method,
             'status': self.status,
             'items': self.items,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'items_data': items_data,
+            'created_at': isoformat_datetime_sg(self.created_at),
+            'created_at_display': format_datetime_sg(self.created_at)
+        }
+
+
+class ReportCheckpoint(db.Model):
+    """Track report reset timestamps per period"""
+    __tablename__ = 'report_checkpoint'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    period = db.Column(db.String(20), unique=True, nullable=False)
+    last_reset_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<ReportCheckpoint {self.period}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'period': self.period,
+            'last_reset_at': isoformat_datetime_sg(self.last_reset_at),
+            'last_reset_at_display': format_datetime_sg(self.last_reset_at)
         }

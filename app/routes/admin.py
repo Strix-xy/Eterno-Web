@@ -4,13 +4,14 @@ Handles admin dashboard, POS, inventory management, and sales
 """
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, send_file
 from app import db
-from app.models import User, Product, Sale, Order
+from app.models import User, Product, Sale, Order, ReportCheckpoint
 from app.utils.helpers import (
     calculate_discount, validate_product_data, 
-    sanitize_string, validate_payment_method
+    sanitize_string, validate_payment_method,
+    get_period_range, get_period_label, normalize_period
 )
 from app.utils.export import export_to_excel
-from app.utils.pdf import generate_sale_receipt
+from app.utils.pdf import generate_sale_receipt, generate_sales_report_pdf
 import json
 import os
 from werkzeug.utils import secure_filename
@@ -31,13 +32,27 @@ def dashboard():
     total_products = Product.query.count()
     total_customers = User.query.filter_by(role='customer').count()
     
+    checkpoint = ReportCheckpoint.query.filter_by(period='overall').first()
+    baseline = checkpoint.last_reset_at if checkpoint else None
+    
+    sale_query = Sale.query
+    order_query = Order.query
+    if baseline:
+        sale_query = sale_query.filter(Sale.created_at >= baseline)
+        order_query = order_query.filter(Order.created_at >= baseline)
+    
     # Calculate total revenue from both POS sales and customer orders
-    pos_revenue = db.session.query(db.func.sum(Sale.total_amount)).scalar() or 0
-    order_revenue = db.session.query(db.func.sum(Order.total_amount)).scalar() or 0
+    pos_revenue = db.session.query(db.func.sum(Sale.total_amount)).filter(Sale.created_at >= baseline).scalar() if baseline else db.session.query(db.func.sum(Sale.total_amount)).scalar()
+    if pos_revenue is None:
+        pos_revenue = 0
+    order_revenue_query = db.session.query(db.func.sum(Order.total_amount))
+    order_revenue = order_revenue_query.filter(Order.created_at >= baseline).scalar() if baseline else order_revenue_query.scalar()
+    if order_revenue is None:
+        order_revenue = 0
     total_revenue = pos_revenue + order_revenue
     
     # Count total orders from both sources
-    total_orders = Sale.query.count() + Order.query.count()
+    total_orders = sale_query.count() + order_query.count()
     
     return render_template('admin_dashboard.html',
                          total_products=total_products,
@@ -293,50 +308,86 @@ def get_orders():
         return jsonify({'error': 'Unauthorized'}), 403
     
     try:
-        # Get pagination parameters
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 100, type=int)  # Default 100 orders per page
-        limit = request.args.get('limit', None, type=int)  # Optional hard limit
+        limit = request.args.get('limit', None, type=int)
         
-        # Build query
-        query = Order.query.order_by(Order.created_at.desc())
+        checkpoint = ReportCheckpoint.query.filter_by(period='overall').first()
+        baseline = checkpoint.last_reset_at if checkpoint else None
         
-        # Apply limit if specified (for initial load, show recent orders)
-        if limit:
-            # Get total count first (for info display)
-            total_count = Order.query.count()
-            # Apply limit and get orders
-            orders = query.limit(limit).all()
-            orders_list = [order.to_dict() for order in orders]
-            
-            return jsonify({
-                'success': True,
-                'orders': orders_list,
-                'total': total_count
+        orders_query = Order.query
+        sales_query = Sale.query
+        if baseline:
+            orders_query = orders_query.filter(Order.created_at >= baseline)
+            sales_query = sales_query.filter(Sale.created_at >= baseline)
+        
+        orders_query = orders_query.order_by(Order.created_at.desc())
+        sales_query = sales_query.order_by(Sale.created_at.desc())
+        
+        total_customer_orders = orders_query.count()
+        total_pos_sales = sales_query.count()
+        
+        orders = orders_query.limit(limit).all() if limit else orders_query.all()
+        sales = sales_query.limit(limit).all() if limit else sales_query.all()
+        
+        transactions = []
+        
+        for order in orders:
+            order_data = order.to_dict()
+            discount_amount = order_data['subtotal'] + (order_data.get('shipping_fee') or 0) - order_data['total_amount']
+            discount_amount = max(0, round(discount_amount, 2))
+            transactions.append({
+                'id': order.id,
+                'record_type': 'customer_order',
+                'reference': f"ORD-{order.id}",
+                'created_at': order_data['created_at'],
+                'created_at_display': order_data['created_at_display'],
+                'customer_name': order_data['customer_name'],
+                'customer_email': order_data['customer_email'],
+                'customer_address': order_data['customer_address'],
+                'payment_method': order_data['payment_method'],
+                'status': order_data['status'],
+                'subtotal': order_data['subtotal'],
+                'shipping_fee': order_data['shipping_fee'],
+                'discount_amount': discount_amount,
+                'discount_type': 'voucher' if discount_amount else None,
+                'total_amount': order_data['total_amount'],
+                'items': order_data.get('items_data', []),
+                'processed_by': 'Online Checkout'
             })
-        else:
-            # Use pagination
-            pagination = query.paginate(
-                page=page,
-                per_page=per_page,
-                error_out=False
-            )
-            orders = pagination.items
-            total_orders = pagination.total
-            
-            # Convert to list of dictionaries
-            orders_list = [order.to_dict() for order in orders]
+        
+        for sale in sales:
+            sale_data = sale.to_dict()
+            transactions.append({
+                'id': sale.id,
+                'record_type': 'pos_sale',
+                'reference': f"POS-{sale.id}",
+                'created_at': sale_data['created_at'],
+                'created_at_display': sale_data['created_at_display'],
+                'customer_name': 'POS Walk-in',
+                'customer_email': None,
+                'customer_address': None,
+                'payment_method': sale_data['payment_method'],
+                'status': 'completed',
+                'subtotal': sale_data['subtotal'],
+                'shipping_fee': 0,
+                'discount_amount': sale_data.get('discount_amount') or 0,
+                'discount_type': sale_data['discount_type'],
+                'total_amount': sale_data['total_amount'],
+                'items': sale_data.get('items_data', []),
+                'processed_by': sale.user.username if getattr(sale, 'user', None) else None
+            })
+        
+        transactions.sort(key=lambda x: x['created_at'] or "", reverse=True)
+        
+        if limit:
+            transactions = transactions[:limit]
             
             return jsonify({
                 'success': True,
-                'orders': orders_list,
-                'pagination': {
-                    'page': page,
-                    'per_page': per_page,
-                    'total': total_orders,
-                    'pages': pagination.pages,
-                    'has_next': pagination.has_next,
-                    'has_prev': pagination.has_prev
+            'transactions': transactions,
+            'totals': {
+                'customer_orders': total_customer_orders,
+                'pos_sales': total_pos_sales,
+                'combined': total_customer_orders + total_pos_sales
                 }
             })
     
@@ -351,12 +402,61 @@ def get_order_details(order_id):
         return jsonify({'error': 'Unauthorized'}), 403
     
     try:
-        order = Order.query.get_or_404(order_id)
+        order = Order.query.get(order_id)
+        if order:
+            order_data = order.to_dict()
+            discount_amount = order_data['subtotal'] + (order_data.get('shipping_fee') or 0) - order_data['total_amount']
+            discount_amount = max(0, round(discount_amount, 2))
+            return jsonify({
+                'success': True,
+                'record_type': 'customer_order',
+                'transaction': {
+                    'id': order.id,
+                    'reference': f"ORD-{order.id}",
+                    'created_at': order_data['created_at'],
+                    'created_at_display': order_data['created_at_display'],
+                    'customer_name': order_data['customer_name'],
+                    'customer_email': order_data['customer_email'],
+                    'customer_address': order_data['customer_address'],
+                    'payment_method': order_data['payment_method'],
+                    'status': order_data['status'],
+                    'subtotal': order_data['subtotal'],
+                    'shipping_fee': order_data['shipping_fee'],
+                    'discount_amount': discount_amount,
+                    'discount_type': 'voucher' if discount_amount else None,
+                    'total_amount': order_data['total_amount'],
+                    'items': order_data.get('items_data', []),
+                    'processed_by': 'Online Checkout'
+                }
+            })
         
+        sale = Sale.query.get(order_id)
+        if sale:
+            sale_data = sale.to_dict()
         return jsonify({
             'success': True,
-            'order': order.to_dict()
-        })
+                'record_type': 'pos_sale',
+                'transaction': {
+                    'id': sale.id,
+                    'reference': f"POS-{sale.id}",
+                    'created_at': sale_data['created_at'],
+                    'created_at_display': sale_data['created_at_display'],
+                    'customer_name': 'POS Walk-in',
+                    'customer_email': None,
+                    'customer_address': None,
+                    'payment_method': sale_data['payment_method'],
+                    'status': 'completed',
+                    'subtotal': sale_data['subtotal'],
+                    'shipping_fee': 0,
+                    'discount_amount': sale_data.get('discount_amount') or 0,
+                    'discount_type': sale_data['discount_type'],
+                    'total_amount': sale_data['total_amount'],
+                    'items': sale_data.get('items_data', []),
+                    'processed_by': sale.user.username if getattr(sale, 'user', None) else None
+                }
+            })
+        
+        return jsonify({'error': 'Transaction not found'}), 404
     
     except Exception as e:
         return jsonify({'error': 'Failed to fetch order details'}), 500
@@ -451,13 +551,22 @@ def get_revenue_breakdown():
         return jsonify({'error': 'Unauthorized'}), 403
     
     try:
+        checkpoint = ReportCheckpoint.query.filter_by(period='overall').first()
+        baseline = checkpoint.last_reset_at if checkpoint else None
+        
         # Calculate revenue from orders
-        orders = Order.query.all()
+        orders_query = Order.query
+        if baseline:
+            orders_query = orders_query.filter(Order.created_at >= baseline)
+        orders = orders_query.all()
         orders_revenue = sum(order.total_amount for order in orders)
         orders_count = len(orders)
         
         # Calculate revenue from POS sales
-        sales = Sale.query.all()
+        sales_query = Sale.query
+        if baseline:
+            sales_query = sales_query.filter(Sale.created_at >= baseline)
+        sales = sales_query.all()
         pos_revenue = sum(sale.total_amount for sale in sales)
         pos_count = len(sales)
         
@@ -478,6 +587,135 @@ def get_revenue_breakdown():
     
     except Exception as e:
         return jsonify({'error': 'Failed to fetch revenue'}), 500
+
+
+@admin_bp.route('/reports/checkpoints')
+def get_report_checkpoints():
+    """Get last reset timestamps for report periods"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        checkpoints = ReportCheckpoint.query.all()
+        return jsonify({
+            'success': True,
+            'checkpoints': {checkpoint.period: checkpoint.to_dict() for checkpoint in checkpoints}
+        })
+    except Exception:
+        return jsonify({'error': 'Failed to fetch report checkpoints'}), 500
+
+
+@admin_bp.route('/reports/reset', methods=['POST'])
+def reset_reports():
+    """Reset report baseline timestamp for a given period"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        data = request.json or {}
+        period = data.get('period')
+        period_key = normalize_period(period)
+        
+        if not period_key:
+            return jsonify({'error': 'Invalid period'}), 400
+        
+        now = datetime.utcnow()
+        checkpoint = ReportCheckpoint.query.filter_by(period=period_key).first()
+        
+        if checkpoint:
+            checkpoint.last_reset_at = now
+        else:
+            checkpoint = ReportCheckpoint(period=period_key, last_reset_at=now)
+            db.session.add(checkpoint)
+        
+        overall_checkpoint = ReportCheckpoint.query.filter_by(period='overall').first()
+        if overall_checkpoint:
+            overall_checkpoint.last_reset_at = now
+        else:
+            overall_checkpoint = ReportCheckpoint(period='overall', last_reset_at=now)
+            db.session.add(overall_checkpoint)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'checkpoint': checkpoint.to_dict(),
+            'message': f'{get_period_label(period_key)} reports reset.'
+        })
+    
+    except Exception:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to reset reports'}), 500
+
+
+@admin_bp.route('/reports/pdf')
+def download_report_pdf():
+    """Generate PDF sales report for the selected period"""
+    if session.get('role') != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        period = request.args.get('period', 'weekly')
+        period_key = normalize_period(period)
+        
+        if not period_key:
+            return jsonify({'error': 'Invalid period'}), 400
+        
+        checkpoint = ReportCheckpoint.query.filter_by(period=period_key).first()
+        last_reset = checkpoint.last_reset_at if checkpoint else None
+        start_date, end_date = get_period_range(period_key, last_reset)
+        
+        orders = Order.query.filter(
+            Order.created_at >= start_date,
+            Order.created_at <= end_date
+        ).all()
+        sales = Sale.query.filter(
+            Sale.created_at >= start_date,
+            Sale.created_at <= end_date
+        ).all()
+        
+        orders_revenue = sum(order.total_amount for order in orders)
+        pos_revenue = sum(sale.total_amount for sale in sales)
+        orders_count = len(orders)
+        pos_count = len(sales)
+        total_revenue = orders_revenue + pos_revenue
+        discounts_orders = sum(
+            max(0, round(order.subtotal + (order.shipping_fee or 0) - order.total_amount, 2))
+            for order in orders
+        )
+        discounts_pos = sum(max(0, sale.discount_amount or 0) for sale in sales)
+        
+        metrics = {
+            'orders_revenue': orders_revenue,
+            'pos_revenue': pos_revenue,
+            'total_revenue': total_revenue,
+            'orders_count': orders_count,
+            'pos_count': pos_count,
+            'discounts_orders': discounts_orders,
+            'discounts_pos': discounts_pos,
+            'combined_discounts': discounts_orders + discounts_pos
+        }
+        
+        report_buffer = generate_sales_report_pdf(
+            get_period_label(period_key),
+            start_date,
+            end_date,
+            metrics
+        )
+        
+        filename = f"sales_report_{period_key}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+        
+        return send_file(
+            report_buffer,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/pdf'
+        )
+    
+    except ValueError:
+        return jsonify({'error': 'Invalid period'}), 400
+    except Exception:
+        return jsonify({'error': 'Failed to generate report'}), 500
 
 
 # ==================== IMAGE UPLOAD ====================

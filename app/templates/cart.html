@@ -130,14 +130,20 @@
           </div>
           
           <div id="paymentDetails" class="payment-details">
-            <div id="codDetails" class="payment-detail-section">
+            <div id="deliveryDetails" class="payment-detail-section show">
               <label>Delivery Address *</label>
               <textarea
-                id="codAddress"
+                id="deliveryAddress"
                 rows="3"
                 placeholder="Enter your complete delivery address"
                 required
               ></textarea>
+            </div>
+
+            <div id="codDetails" class="payment-detail-section">
+              <p class="payment-note">
+                Cash on Delivery orders will be shipped to the delivery address provided above.
+              </p>
             </div>
             
             <div id="gcashDetails" class="payment-detail-section">

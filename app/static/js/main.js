@@ -104,11 +104,18 @@ function showPaymentDetails() {
   if (!paymentMethod) return;
   
   const paymentValue = paymentMethod.value;
+  const deliveryAddressInput = document.getElementById("deliveryAddress");
+  if (deliveryAddressInput) {
+    deliveryAddressInput.required = true;
+  }
   const paymentDetails = document.getElementById("paymentDetails");
+  if (paymentDetails) paymentDetails.style.display = "block";
   const codDetails = document.getElementById("codDetails");
   const gcashDetails = document.getElementById("gcashDetails");
   const cardDetails = document.getElementById("cardDetails");
   const paypalDetails = document.getElementById("paypalDetails");
+  const deliveryDetails = document.getElementById("deliveryDetails");
+  if (deliveryDetails) deliveryDetails.classList.add("show");
 
   if (codDetails) codDetails.classList.remove("show");
   if (gcashDetails) gcashDetails.classList.remove("show");
@@ -117,8 +124,6 @@ function showPaymentDetails() {
   if (paymentValue === "cod") {
     if (paymentDetails) paymentDetails.style.display = "block";
     if (codDetails) codDetails.classList.add("show");
-    const codAddress = document.getElementById("codAddress");
-    if (codAddress) codAddress.required = true;
   } else if (paymentValue === "gcash") {
     if (paymentDetails) paymentDetails.style.display = "block";
     if (gcashDetails) gcashDetails.classList.add("show");
@@ -197,16 +202,22 @@ function checkoutBtnHandler(btn) {
   }
 
   const paymentValue = paymentMethod.value;
-  let paymentDetails = {};
-
-  if (paymentValue === "cod") {
-    const address = document.getElementById("codAddress");
-    if (!address || !address.value.trim()) {
-      alert("Please enter your delivery address");
-      return;
+  const addressInput = document.getElementById("deliveryAddress");
+  if (!addressInput || !addressInput.value.trim()) {
+    alert("Please enter your delivery address");
+    if (addressInput) {
+      addressInput.focus();
     }
-    paymentDetails.address = address.value.trim();
-  } else if (paymentValue === "gcash") {
+    return;
+  }
+
+  const deliveryAddress = addressInput.value.trim();
+  let paymentDetails = {
+    address: deliveryAddress,
+    customer_address: deliveryAddress
+  };
+
+  if (paymentValue === "gcash") {
     const gcashNumber = document.getElementById("gcashNumber");
     const gcashAccountName = document.getElementById("gcashAccountName");
     if (!gcashNumber || !gcashNumber.value.trim()) {
@@ -261,10 +272,11 @@ function showConfirmationSummary(paymentMethod, paymentDetails) {
   summary += `Delivery Fee: ₱${deliveryFee.toFixed(2)}\n`;
   summary += `Total: ₱${total.toFixed(2)}\n\n`;
   summary += `Payment Method: ${paymentMethod.toUpperCase()}\n`;
+  if (paymentDetails.customer_address || paymentDetails.address) {
+    summary += `Delivery Address: ${paymentDetails.customer_address || paymentDetails.address}\n`;
+  }
   
-  if (paymentMethod === "cod") {
-    summary += `Delivery Address: ${paymentDetails.address}\n`;
-  } else if (paymentMethod === "gcash") {
+  if (paymentMethod === "gcash") {
     summary += `GCash Number: ${paymentDetails.gcash_number}\n`;
     summary += `Account Name: ${paymentDetails.gcash_account_name}\n`;
   } else if (paymentMethod === "credit_card") {
@@ -292,7 +304,7 @@ async function proceedCheckout(paymentMethod, paymentDetails, deliveryFee) {
       },
       body: JSON.stringify({
         payment_method: paymentMethod,
-        customer_address: paymentDetails.address || "",
+        customer_address: paymentDetails.customer_address || paymentDetails.address || "",
         gcash_number: paymentDetails.gcash_number || "",
         gcash_account_name: paymentDetails.gcash_account_name || "",
         card_type: paymentDetails.card_type || "",
@@ -402,7 +414,7 @@ function showNotification(message, type = "success") {
 }
 
 let currentFilter = "all";
-let allOrders = [];
+let allTransactions = [];
 
 async function viewOrders() {
   const modal = document.getElementById("ordersModal");
@@ -414,17 +426,23 @@ async function viewOrders() {
     const response = await fetch("/admin/orders?limit=200");
     const data = await response.json();
     if (data.success) {
-      allOrders = data.orders;
-      displayOrders(allOrders);
+      allTransactions = data.transactions || [];
+      displayOrders(allTransactions);
       
-      if (data.total && data.total > 200) {
+      if (container) {
         const existingMsg = container.querySelector(".orders-info-message");
         if (existingMsg) existingMsg.remove();
         
+        const totals = data.totals || {};
+        const combinedTotal = totals.combined ?? allTransactions.length;
         const infoMsg = document.createElement("div");
         infoMsg.className = "orders-info-message";
         infoMsg.style.cssText = "text-align: center; padding: 1rem; margin-top: 1rem; color: var(--text-gray); font-size: 0.9rem; border-top: 1px solid var(--border-color);";
-        infoMsg.textContent = `Showing most recent 200 orders (${data.total} total). Use filters to narrow down results.`;
+        let summaryText = `Showing ${allTransactions.length} recent transactions (Customer: ${totals.customer_orders ?? 0} | POS: ${totals.pos_sales ?? 0} | Combined: ${combinedTotal}).`;
+        if (combinedTotal > allTransactions.length) {
+          summaryText += " Use filters to narrow down results.";
+        }
+        infoMsg.textContent = summaryText;
         container.appendChild(infoMsg);
       }
     } else {
@@ -459,59 +477,78 @@ function filterOrders(filter, button) {
     });
   }
 
-  let filteredOrders = allOrders;
+  let filteredTransactions = allTransactions;
   if (filter === "paid") {
-    filteredOrders = allOrders.filter(
-      (order) => order.status === "completed" || order.status === "paid"
-    );
+    filteredTransactions = allTransactions.filter((transaction) => {
+      const status = (transaction.status || "").toLowerCase();
+      if (transaction.record_type === "pos_sale") {
+        return true;
+      }
+      return status === "completed" || status === "paid";
+    });
   } else if (filter === "pending") {
-    filteredOrders = allOrders.filter((order) => order.status === "pending");
+    filteredTransactions = allTransactions.filter(
+      (transaction) =>
+        transaction.record_type === "customer_order" &&
+        (transaction.status || "").toLowerCase() === "pending"
+    );
   }
-
-  displayOrders(filteredOrders);
+  
+  displayOrders(filteredTransactions);
 }
 
-function displayOrders(orders) {
+function displayOrders(transactions) {
   const tbody = document.getElementById("ordersTableBody");
   if (!tbody) return;
-  if (!orders || orders.length === 0) {
+  if (!transactions || transactions.length === 0) {
     tbody.innerHTML =
       '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No orders found</td></tr>';
     return;
   }
 
-  tbody.innerHTML = orders
-    .map((order) => {
-      const date = new Date(order.created_at);
+  tbody.innerHTML = transactions
+    .map((transaction) => {
+      const isPosSale = transaction.record_type === "pos_sale";
+      const statusValue = (transaction.status || (isPosSale ? "completed" : "")).toLowerCase();
       const statusClass =
-        order.status === "completed" || order.status === "paid"
+        statusValue === "completed" || statusValue === "paid"
           ? "status-paid"
-          : "status-pending";
+          : statusValue === "pending"
+          ? "status-pending"
+          : "";
+      const statusLabel = isPosSale
+        ? "COMPLETED"
+        : (transaction.status || "N/A").toUpperCase();
+      const paymentLabel = (transaction.payment_method || (isPosSale ? "cash" : "n/a")).toUpperCase();
+      const reference = transaction.reference || `#${transaction.id}`;
+      const badgeClass = isPosSale ? "badge-pos" : "badge-customer";
+      const badgeLabel = isPosSale ? "POS" : "ONLINE";
+      const dateDisplay = transaction.created_at_display || transaction.created_at || "";
+      const totalAmount = parseFloat(transaction.total_amount || 0).toFixed(2);
+      const customerName = transaction.customer_name || (isPosSale ? "POS Walk-in" : "N/A");
+      const changeStatusCell = isPosSale
+        ? '<td style="text-align: center; color: var(--text-gray);">—</td>'
+        : `<td>
+            <select class="status-select" data-order-id="${transaction.id}" onchange="updateOrderStatus(${transaction.id}, this.value)">
+              <option value="pending" ${statusValue === "pending" ? "selected" : ""}>PENDING</option>
+              <option value="completed" ${statusValue === "completed" || statusValue === "paid" ? "selected" : ""}>COMPLETED</option>
+            </select>
+          </td>`;
       return `
         <tr>
-          <td>#${order.id}</td>
-          <td>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</td>
-          <td>${order.customer_name}</td>
-          <td>₱${parseFloat(order.total_amount).toFixed(2)}</td>
-          <td class="${statusClass}">${order.status.toUpperCase()}</td>
-          <td>${order.payment_method.toUpperCase()}</td>
-          <td><button class="order-details-btn" onclick="viewOrderDetails(${
-            order.id
-          })">VIEW DETAILS</button></td>
           <td>
-            <select class="status-select" data-order-id="${order.id}" onchange="updateOrderStatus(${
-              order.id
-            }, this.value)">
-              <option value="pending" ${
-                order.status === "pending" ? "selected" : ""
-              }>PENDING</option>
-              <option value="completed" ${
-                order.status === "completed" || order.status === "paid"
-                  ? "selected"
-                  : ""
-              }>COMPLETED</option>
-            </select>
+            <span class="transaction-badge ${badgeClass}">${badgeLabel}</span>
+            ${reference}
           </td>
+          <td>${dateDisplay}</td>
+          <td>${customerName}</td>
+          <td>₱${totalAmount}</td>
+          <td class="${statusClass}">${statusLabel}</td>
+          <td>${paymentLabel}</td>
+          <td><button class="order-details-btn" onclick="viewOrderDetails(${
+            transaction.id
+          })">VIEW DETAILS</button></td>
+          ${changeStatusCell}
         </tr>
       `;
     })
@@ -523,7 +560,7 @@ async function viewOrderDetails(orderId) {
     const response = await fetch(`/admin/orders/${orderId}`);
     const data = await response.json();
     if (data.success) {
-      displayOrderDetails(data.order);
+      displayTransactionDetails(data.transaction, data.record_type);
       const modal = document.getElementById("orderDetailsModal");
       if (modal) modal.classList.add("active");
     } else {
@@ -534,89 +571,123 @@ async function viewOrderDetails(orderId) {
   }
 }
 
-function displayOrderDetails(order) {
-  if (!order) return;
+function displayTransactionDetails(transaction, recordType) {
+  if (!transaction) return;
   const container = document.getElementById("orderDetailsContent");
   if (!container) return;
 
-  let items = [];
-  try {
-    items = JSON.parse(order.items || "[]");
-  } catch (e) {
-    items = [];
-  }
-
-  const date = new Date(order.created_at);
+  const isPosSale = recordType === "pos_sale" || transaction.record_type === "pos_sale";
+  const items = Array.isArray(transaction.items) ? transaction.items : [];
+  const dateDisplay = transaction.created_at_display || transaction.created_at || "";
+  const statusValue = (transaction.status || (isPosSale ? "completed" : "")).toUpperCase();
   const statusClass =
-    order.status === "completed" || order.status === "paid"
+    statusValue === "COMPLETED" || statusValue === "PAID"
       ? "status-paid"
-      : "status-pending";
-
-  const content = `
-      <div style="margin-bottom: 2rem;">
-        <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px; margin-bottom: 1rem;">ORDER #${
-          order.id
-        }</h3>
-        <p><strong>Date:</strong> ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</p>
-        <p><strong>Customer:</strong> ${order.customer_name}</p>
-        <p><strong>Email:</strong> ${order.customer_email}</p>
-        ${
-          order.customer_address
-            ? `<p><strong>Address:</strong> ${order.customer_address}</p>`
-            : ""
-        }
-        <p><strong>Payment Method:</strong> ${order.payment_method.toUpperCase()}</p>
-        <p><strong>Status:</strong> <span class="${statusClass}">${order.status.toUpperCase()}</span></p>
-      </div>
-      <div style="margin-bottom: 2rem;">
-        <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px; margin-bottom: 1rem;">ITEMS</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 1px solid var(--border-color);">
-              <th style="padding: 0.5rem; text-align: left;">Product</th>
-              <th style="padding: 0.5rem; text-align: right;">Quantity</th>
-              <th style="padding: 0.5rem; text-align: right;">Price</th>
-              <th style="padding: 0.5rem; text-align: right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items
-              .map(
-                (item) => `
+      : statusValue === "PENDING"
+      ? "status-pending"
+      : "";
+  const paymentMethod = (transaction.payment_method || (isPosSale ? "cash" : "n/a")).toUpperCase();
+  const subtotal = parseFloat(transaction.subtotal || 0);
+  const shippingFee = parseFloat(transaction.shipping_fee || 0);
+  const discountAmount = parseFloat(transaction.discount_amount || 0);
+  const discountLabel = transaction.discount_type
+    ? transaction.discount_type.toUpperCase()
+    : "DISCOUNT";
+  const total = parseFloat(transaction.total_amount || 0);
+  const processedBy = transaction.processed_by || (isPosSale ? "Admin" : "Online Checkout");
+  const reference = transaction.reference || `#${transaction.id}`;
+  const customerName = transaction.customer_name || (isPosSale ? "POS Walk-in" : "N/A");
+  const customerEmail = transaction.customer_email || "";
+  const customerAddress = transaction.customer_address || "";
+  
+  const itemRows =
+    items && items.length
+      ? items
+          .map((item) => {
+            const name = item.product_name || item.name || "Item";
+            const quantity = parseFloat(item.quantity || 0);
+            const price = parseFloat(item.price || 0);
+            const lineTotal = price * quantity;
+            return `
               <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.5rem;">${item.product_name}</td>
-                <td style="padding: 0.5rem; text-align: right;">${
-                  item.quantity
-                }</td>
-                <td style="padding: 0.5rem; text-align: right;">₱${parseFloat(
-                  item.price
-                ).toFixed(2)}</td>
-                <td style="padding: 0.5rem; text-align: right;">₱${(
-                  parseFloat(item.price) * item.quantity
-                ).toFixed(2)}</td>
+                <td style="padding: 0.5rem;">${name}</td>
+                <td style="padding: 0.5rem; text-align: right;">${quantity}</td>
+                <td style="padding: 0.5rem; text-align: right;">₱${price.toFixed(2)}</td>
+                <td style="padding: 0.5rem; text-align: right;">₱${lineTotal.toFixed(2)}</td>
               </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
-      </div>
-      <div style="border-top: 2px solid var(--border-color); padding-top: 1rem;">
-        <p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span>Subtotal:</span>
-          <span>₱${parseFloat(order.subtotal).toFixed(2)}</span>
-        </p>
-        <p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span>Shipping Fee:</span>
-          <span>₱${parseFloat(order.shipping_fee || 0).toFixed(2)}</span>
-        </p>
-        <p style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-top: 1rem;">
-          <span>Total:</span>
-          <span>₱${parseFloat(order.total_amount).toFixed(2)}</span>
-        </p>
+            `;
+          })
+          .join("")
+      : `<tr><td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-gray);">No items recorded.</td></tr>`;
+  
+  const discountRow =
+    discountAmount > 0
+      ? `<p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Discount (${discountLabel}):</span>
+          <span>-₱${discountAmount.toFixed(2)}</span>
+        </p>`
+      : "";
+  
+  const shippingRow = !isPosSale
+    ? `<p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+        <span>Shipping Fee:</span>
+        <span>₱${shippingFee.toFixed(2)}</span>
+      </p>`
+    : "";
+  
+  const customerDetails = isPosSale
+    ? `<p><strong>Customer:</strong> POS Walk-in</p>`
+    : `
+        <p><strong>Customer:</strong> ${customerName}</p>
+        ${customerEmail ? `<p><strong>Email:</strong> ${customerEmail}</p>` : ""}
+        ${customerAddress ? `<p><strong>Address:</strong> ${customerAddress}</p>` : ""}
+      `;
+  
+  const content = `
+      <div class="transaction-receipt-block">
+        <div style="margin-bottom: 1.5rem;">
+          <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px; margin-bottom: 0.75rem;">${isPosSale ? "POS SALE" : "CUSTOMER ORDER"}</h3>
+          <p><strong>Reference:</strong> ${reference}</p>
+          <p><strong>Date & Time:</strong> ${dateDisplay}</p>
+          <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+          <p><strong>Status:</strong> <span class="${statusClass}">${statusValue}</span></p>
+          <p><strong>Processed By:</strong> ${processedBy}</p>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="font-family: 'Cinzel', serif; letter-spacing: 2px; margin-bottom: 0.75rem;">CUSTOMER DETAILS</h4>
+          ${customerDetails}
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="font-family: 'Cinzel', serif; letter-spacing: 2px; margin-bottom: 0.75rem;">ITEMS</h4>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <th style="padding: 0.5rem; text-align: left;">Product</th>
+                <th style="padding: 0.5rem; text-align: right;">Qty</th>
+                <th style="padding: 0.5rem; text-align: right;">Price</th>
+                <th style="padding: 0.5rem; text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemRows}
+            </tbody>
+          </table>
+        </div>
+        <div style="border-top: 2px solid var(--border-color); padding-top: 1rem;">
+          <p style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Subtotal:</span>
+            <span>₱${subtotal.toFixed(2)}</span>
+          </p>
+          ${discountRow}
+          ${shippingRow}
+          <p style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; margin-top: 1rem;">
+            <span>Total:</span>
+            <span>₱${total.toFixed(2)}</span>
+          </p>
+        </div>
       </div>
     `;
-
+  
   container.innerHTML = content;
 }
 
@@ -766,47 +837,146 @@ function displayRevenue(revenue) {
   const container = document.getElementById("revenueContent");
   if (!container || !revenue) return;
   container.innerHTML = `
-      <div class="revenue-breakdown">
-        <div class="revenue-item">
-          <div class="revenue-item-header">
-            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Total Revenue</h3>
-            <div class="revenue-amount">₱${parseFloat(revenue.total).toFixed(
-              2
-            )}</div>
+      <div class="revenue-layout">
+        <div class="report-controls">
+          <h3 class="report-controls-title">Report Actions</h3>
+          <div class="report-buttons">
+            <button class="btn report-btn" onclick="resetReports('weekly')">Reset Weekly</button>
+            <button class="btn report-btn" onclick="resetReports('monthly')">Reset Monthly</button>
+            <button class="btn report-btn" onclick="resetReports('yearly')">Reset Yearly</button>
+          </div>
+          <div class="report-buttons">
+            <button class="btn report-btn" onclick="downloadReport('weekly')">Download Weekly PDF</button>
+            <button class="btn report-btn" onclick="downloadReport('monthly')">Download Monthly PDF</button>
+            <button class="btn report-btn" onclick="downloadReport('yearly')">Download Yearly PDF</button>
+          </div>
+          <div id="reportCheckpoints" class="report-checkpoints">
+            <p style="color: var(--text-gray);">Loading report status...</p>
           </div>
         </div>
-        <div class="revenue-item">
-          <div class="revenue-item-header">
-            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">From Orders</h3>
-            <div class="revenue-amount">₱${parseFloat(
-              revenue.from_orders
-            ).toFixed(2)}</div>
+        <div class="revenue-breakdown">
+          <div class="revenue-item">
+            <div class="revenue-item-header">
+              <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Total Revenue</h3>
+              <div class="revenue-amount">₱${parseFloat(revenue.total).toFixed(
+                2
+              )}</div>
+            </div>
           </div>
-          <p style="color: var(--text-gray); margin-top: 0.5rem;">Total: ${
-            revenue.orders_count
-          } orders</p>
-        </div>
-        <div class="revenue-item">
-          <div class="revenue-item-header">
-            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">From POS Sales</h3>
-            <div class="revenue-amount">₱${parseFloat(revenue.from_pos).toFixed(
-              2
-            )}</div>
+          <div class="revenue-item">
+            <div class="revenue-item-header">
+              <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">From Orders</h3>
+              <div class="revenue-amount">₱${parseFloat(
+                revenue.from_orders
+              ).toFixed(2)}</div>
+            </div>
+            <p style="color: var(--text-gray); margin-top: 0.5rem;">Total: ${
+              revenue.orders_count
+            } orders</p>
           </div>
-          <p style="color: var(--text-gray); margin-top: 0.5rem;">Total: ${
-            revenue.pos_count
-          } sales</p>
-        </div>
-        <div class="revenue-item">
-          <div class="revenue-item-header">
-            <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Average Order Value</h3>
-            <div class="revenue-amount">₱${parseFloat(
-              revenue.avg_order_value
-            ).toFixed(2)}</div>
+          <div class="revenue-item">
+            <div class="revenue-item-header">
+              <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">From POS Sales</h3>
+              <div class="revenue-amount">₱${parseFloat(revenue.from_pos).toFixed(
+                2
+              )}</div>
+            </div>
+            <p style="color: var(--text-gray); margin-top: 0.5rem;">Total: ${
+              revenue.pos_count
+            } sales</p>
+          </div>
+          <div class="revenue-item">
+            <div class="revenue-item-header">
+              <h3 style="font-family: 'Cinzel', serif; letter-spacing: 2px;">Average Order Value</h3>
+              <div class="revenue-amount">₱${parseFloat(
+                revenue.avg_order_value
+              ).toFixed(2)}</div>
+            </div>
           </div>
         </div>
       </div>
     `;
+  loadReportCheckpoints();
+}
+
+async function loadReportCheckpoints() {
+  const container = document.getElementById("reportCheckpoints");
+  if (!container) return;
+  
+  try {
+    const response = await fetch("/admin/reports/checkpoints");
+    const data = await response.json();
+    if (data.success) {
+      renderReportCheckpoints(data.checkpoints || {});
+    } else {
+      container.innerHTML = `<p style="color: #ff7373;">${data.error || "Unable to load report status."}</p>`;
+    }
+  } catch (error) {
+    container.innerHTML = `<p style="color: #ff7373;">${error.message}</p>`;
+  }
+}
+
+function renderReportCheckpoints(checkpoints) {
+  const container = document.getElementById("reportCheckpoints");
+  if (!container) return;
+  
+  const periods = [
+    { key: "weekly", label: "Weekly" },
+    { key: "monthly", label: "Monthly" },
+    { key: "yearly", label: "Yearly" },
+  ];
+  
+  const items = periods
+    .map(({ key, label }) => {
+      const entry = checkpoints[key];
+      const displayValue = entry ? entry.last_reset_at_display : "Not reset yet";
+      return `
+        <div class="report-checkpoint-item">
+          <span class="report-checkpoint-label">${label} reset:</span>
+          <span class="report-checkpoint-value">${displayValue}</span>
+        </div>
+      `;
+    })
+    .join("");
+  
+  container.innerHTML = items;
+}
+
+async function resetReports(period) {
+  const periodLabel = period.charAt(0).toUpperCase() + period.slice(1);
+  if (
+    !confirm(
+      `Reset ${periodLabel} sales reports? This will update the baseline timestamp for ${periodLabel.toLowerCase()} reporting.`
+    )
+  ) {
+    return;
+  }
+  
+  try {
+    const response = await fetch("/admin/reports/reset", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ period }),
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showNotification(data.message || `${periodLabel} reports reset.`);
+      loadReportCheckpoints();
+    } else {
+      showNotification(data.error || "Failed to reset reports.", "error");
+    }
+  } catch (error) {
+    showNotification(error.message, "error");
+  }
+}
+
+function downloadReport(period) {
+  const url = `/admin/reports/pdf?period=${encodeURIComponent(period)}`;
+  window.open(url, "_blank");
 }
 
 function closeRevenueModal() {
@@ -816,6 +986,15 @@ function closeRevenueModal() {
 
 // Update Order Status
 async function updateOrderStatus(orderId, newStatus) {
+  const targetOrder = allTransactions.find(
+    (transaction) =>
+      transaction.id === orderId &&
+      transaction.record_type === "customer_order"
+  );
+  if (!targetOrder) {
+    showNotification("Only customer orders can be updated.", "error");
+    return;
+  }
   if (
     !confirm(`Change order #${orderId} status to ${newStatus.toUpperCase()}?`)
   ) {
@@ -824,7 +1003,7 @@ async function updateOrderStatus(orderId, newStatus) {
       const response = await fetch("/admin/orders");
       const data = await response.json();
       if (data.success) {
-        allOrders = data.orders;
+        allTransactions = data.transactions || [];
         filterOrders(currentFilter, null);
       }
     } catch (error) {
@@ -845,9 +1024,13 @@ async function updateOrderStatus(orderId, newStatus) {
     const data = await response.json();
 
     if (data.success) {
-      const orderIndex = allOrders.findIndex((o) => o.id === orderId);
+      const orderIndex = allTransactions.findIndex(
+        (transaction) =>
+          transaction.id === orderId &&
+          transaction.record_type === "customer_order"
+      );
       if (orderIndex !== -1) {
-        allOrders[orderIndex].status = newStatus;
+        allTransactions[orderIndex].status = newStatus;
       }
       filterOrders(currentFilter, null);
       showNotification("Order status updated successfully!");
@@ -857,7 +1040,7 @@ async function updateOrderStatus(orderId, newStatus) {
         const response = await fetch("/admin/orders");
         const data = await response.json();
         if (data.success) {
-          allOrders = data.orders;
+          allTransactions = data.transactions || [];
           filterOrders(currentFilter, null);
         }
       } catch (error) {
@@ -869,7 +1052,7 @@ async function updateOrderStatus(orderId, newStatus) {
       const response = await fetch("/admin/orders");
       const data = await response.json();
       if (data.success) {
-        allOrders = data.orders;
+        allTransactions = data.transactions || [];
         filterOrders(currentFilter, null);
       }
     } catch (err) {
@@ -1353,7 +1536,12 @@ async function completeSale() {
     const data = await response.json();
 
     if (data.success) {
-      alert("Sale completed successfully!");
+      const singaporeTime = new Intl.DateTimeFormat("en-SG", {
+        dateStyle: "medium",
+        timeStyle: "medium",
+        timeZone: "Asia/Singapore",
+      }).format(new Date());
+      alert(`Sale completed successfully!\nSingapore Time: ${singaporeTime}\nGenerating receipt...`);
       window.open(`/admin/receipt/${data.sale_id}`, "_blank");
       window.posCart = [];
       window.posCurrentDiscount = { type: null, amount: 0 };

@@ -1542,6 +1542,12 @@ footer p {
   display: block;
 }
 
+.payment-detail-section .payment-note {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-gray);
+}
+
 .payment-details {
   margin-top: 1rem;
   display: none;
@@ -2137,6 +2143,29 @@ footer p {
   border-bottom: 1px solid var(--border-color);
 }
 
+.transaction-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  margin-right: 0.75rem;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.badge-customer {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-white);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge-pos {
+  background: rgba(0, 173, 181, 0.2);
+  color: #00adb5;
+  border: 1px solid rgba(0, 173, 181, 0.4);
+}
+
 .order-details-btn {
   padding: 0.5rem 1rem;
   background: transparent;
@@ -2179,6 +2208,19 @@ footer p {
   width: 92%;
   max-height: 90vh;
   overflow-y: auto;
+}
+
+.transaction-receipt-block {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 2rem;
+  border-radius: 8px;
+  line-height: 1.7;
+}
+
+.transaction-receipt-block h3,
+.transaction-receipt-block h4 {
+  text-transform: uppercase;
 }
 
 .status-pending {
@@ -2259,6 +2301,74 @@ footer p {
   color: rgba(255, 255, 255, 0.2);
   border: 1px solid var(--border-color);
   border-radius: 4px;
+}
+
+.revenue-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 992px) {
+  .revenue-layout {
+    flex-direction: row;
+  }
+  
+  .report-controls {
+    width: 35%;
+  }
+  
+  .revenue-breakdown {
+    flex: 1;
+  }
+}
+
+.report-controls {
+  border: 1px solid var(--border-color);
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.report-controls-title {
+  font-family: "Cinzel", serif;
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem;
+}
+
+.report-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.report-buttons .report-btn {
+  letter-spacing: 1px;
+}
+
+.report-checkpoints {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.report-checkpoint-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-gray);
+}
+
+.report-checkpoint-label {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.report-checkpoint-value {
+  color: var(--text-white);
 }
 
 .revenue-breakdown {

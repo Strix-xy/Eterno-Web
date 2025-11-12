@@ -4,6 +4,7 @@ Exports database records to Excel file
 """
 import pandas as pd
 from app.models import User, Product, Sale, Order
+from app.utils.helpers import format_datetime_sg
 
 def export_to_excel():
     """
@@ -18,7 +19,7 @@ def export_to_excel():
             'Username': u.username,
             'Email': u.email,
             'Role': u.role,
-            'Created': u.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'Created': format_datetime_sg(u.created_at)
         } for u in users]
         df_users = pd.DataFrame(users_data)
         
@@ -32,7 +33,7 @@ def export_to_excel():
             'Stock': p.stock,
             'Category': p.category,
             'Image_URL': p.image_url,
-            'Created': p.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'Created': format_datetime_sg(p.created_at)
         } for p in products]
         df_products = pd.DataFrame(products_data)
         
@@ -46,7 +47,7 @@ def export_to_excel():
             'Discount_Type': s.discount_type or 'None',
             'Discount_Amount': s.discount_amount,
             'Items': s.items,
-            'Date': s.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'Date': format_datetime_sg(s.created_at)
         } for s in sales]
         df_sales = pd.DataFrame(sales_data)
         
@@ -64,7 +65,7 @@ def export_to_excel():
             'Payment_Method': o.payment_method,
             'Status': o.status,
             'Items': o.items,
-            'Purchase_Date': o.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            'Purchase_Date': format_datetime_sg(o.created_at)
         } for o in orders]
         df_orders = pd.DataFrame(orders_data)
         

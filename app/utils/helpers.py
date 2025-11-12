@@ -4,7 +4,11 @@ Utility functions used across the application
 """
 import re
 import random
+from datetime import datetime, timedelta
 from flask import current_app
+from pytz import timezone, utc
+
+SG_TIMEZONE = timezone('Asia/Singapore')
 
 def format_peso(amount):
     """
@@ -151,6 +155,43 @@ def sanitize_string(value, max_length=None):
     return sanitized
 
 
+def to_singapore_time(dt):
+    """
+    Convert a naive or timezone-aware datetime to Asia/Singapore timezone.
+    """
+    if not dt:
+        return None
+    
+    if dt.tzinfo is None:
+        dt = utc.localize(dt)
+    else:
+        dt = dt.astimezone(utc)
+    
+    return dt.astimezone(SG_TIMEZONE)
+
+
+def format_datetime_sg(dt, fmt='%Y-%m-%d %H:%M:%S', include_timezone_suffix=True):
+    """
+    Format datetime in Singapore timezone with optional timezone suffix.
+    """
+    sg_dt = to_singapore_time(dt)
+    if not sg_dt:
+        return None
+    
+    formatted = sg_dt.strftime(fmt)
+    if include_timezone_suffix:
+        return f"{formatted} SGT"
+    return formatted
+
+
+def isoformat_datetime_sg(dt):
+    """
+    Return ISO 8601 formatted datetime string in Singapore timezone.
+    """
+    sg_dt = to_singapore_time(dt)
+    return sg_dt.isoformat() if sg_dt else None
+
+
 def calculate_cart_totals(cart_items):
     """
     Calculate subtotal and item count for cart
@@ -201,3 +242,52 @@ def validate_order_status(status):
     """
     valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'completed']
     return status in valid_statuses if status else False
+
+
+PERIOD_LABELS = {
+    'weekly': 'Weekly',
+    'monthly': 'Monthly',
+    'yearly': 'Yearly'
+}
+
+
+def normalize_period(period):
+    """
+    Normalize a period string to canonical keyword.
+    """
+    if not period or not isinstance(period, str):
+        return None
+    period_key = period.strip().lower()
+    return period_key if period_key in PERIOD_LABELS else None
+
+
+def get_period_range(period, last_reset=None):
+    """
+    Determine reporting window for given period and optional reset timestamp.
+    """
+    period_key = normalize_period(period)
+    if not period_key:
+        raise ValueError('Invalid reporting period')
+    
+    now = datetime.utcnow()
+    if last_reset:
+        start = last_reset
+    else:
+        if period_key == 'weekly':
+            start = now - timedelta(days=7)
+        elif period_key == 'monthly':
+            start = now - timedelta(days=30)
+        else:
+            start = now - timedelta(days=365)
+    
+    return start, now
+
+
+def get_period_label(period):
+    """
+    Return human-readable label for reporting period.
+    """
+    period_key = normalize_period(period)
+    if not period_key:
+        return period.capitalize() if period else ''
+    return PERIOD_LABELS[period_key]
