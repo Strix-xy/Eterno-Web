@@ -771,6 +771,13 @@ def upload_product_image():
     if session.get('role') != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
     
+    # Check if running on Vercel (serverless environment)
+    if os.environ.get('VERCEL'):
+        return jsonify({
+            'error': 'File upload not available in serverless environment. Please use direct image URLs instead.',
+            'use_url_upload': True
+        }), 400
+    
     try:
         if 'image' not in request.files:
             return jsonify({'error': 'No image file provided'}), 400

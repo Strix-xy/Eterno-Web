@@ -20,13 +20,17 @@ def create_app(config_name='default'):
     Returns:
         Configured Flask application instance
     """
-    # Create Flask app with instance folder support
+    # Create Flask app - handle Vercel environment differently
     import os
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    instance_path = os.path.join(os.path.dirname(basedir), 'instance')
-    os.makedirs(instance_path, exist_ok=True)
-    
-    app = Flask(__name__, instance_path=instance_path, instance_relative_config=True)
+    if config_name == 'vercel':
+        # For Vercel, don't use instance folder to avoid file system issues
+        app = Flask(__name__)
+    else:
+        # For other environments, use instance folder
+        basedir = os.path.abspath(os.path.dirname(__file__))
+        instance_path = os.path.join(os.path.dirname(basedir), 'instance')
+        os.makedirs(instance_path, exist_ok=True)
+        app = Flask(__name__, instance_path=instance_path, instance_relative_config=True)
     
     # Load configuration
     app.config.from_object(config[config_name])
