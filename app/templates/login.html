@@ -20,13 +20,13 @@
         <form method="POST" action="{{ url_for('auth.login') }}">
           <div class="form-grp">
             <label class="form-lbl">Username</label>
-            <input type="text" class="form-ctrl" name="username" placeholder="yourusername" required autocomplete="username">
+            <input type="text" class="form-ctrl" name="username" placeholder="yourusername" required autocomplete="username" style="padding-left:10px">
           </div>
           <div class="form-grp">
             <label class="form-lbl">Password</label>
             <div style="display:flex;gap:.5rem;align-items:center">
-              <input id="loginPasswordInput" type="password" class="form-ctrl" name="password" placeholder="••••••••" required autocomplete="current-password">
-              <button type="button" class="btn btn-g btn-sm" onclick="toggleLoginPassword()">Show</button>
+              <input id="loginPasswordInput" type="password" class="form-ctrl" name="password" placeholder="••••••••" required autocomplete="current-password" style="padding-left:10px">
+              <button type="button" class="btn btn-g btn-sm" id="loginShowBtn" onclick="toggleLoginPassword()">Show</button>
             </div>
           </div>
           <button class="form-submit" type="submit">Sign In</button>
@@ -42,7 +42,10 @@
 <script>
   function toggleLoginPassword() {
     const input = document.getElementById('loginPasswordInput');
-    input.type = input.type === 'password' ? 'text' : 'password';
+    const btn = document.getElementById('loginShowBtn');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? 'Hide' : 'Show';
   }
 </script>
 {% endblock %}

@@ -80,7 +80,7 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password, password):
-            if not user.is_verified:
+            if user.role == 'customer' and not getattr(user, 'is_verified', True):
                 return render_template('login.html', error='Please verify your email before logging in.')
             session['user_id'] = user.id
             session['username'] = user.username
