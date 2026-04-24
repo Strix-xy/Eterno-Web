@@ -17,55 +17,133 @@
         {% if error %}
         <p style="margin-bottom:1rem;color:#ff6b6b;font-size:.8rem">{{ error }}</p>
         {% endif %}
-        <form method="POST" action="{{ url_for('auth.register') }}">
+        <form method="POST" action="{{ url_for('auth.register') }}" id="regForm" novalidate>
+
+          <!-- Full Name: max 100 -->
           <div class="form-grp">
             <label class="form-lbl">Full Name</label>
-            <input type="text" class="form-ctrl" name="full_name" placeholder="Your full name" required autocomplete="name">
+            <input type="text" class="form-ctrl" name="full_name"
+              placeholder="Your full name" required autocomplete="name"
+              maxlength="100"
+              oninput="validateRegField(this, 1, 100, 'regFullNameMsg', 'Max 100 characters')">
+            <p id="regFullNameMsg" class="reg-hint"></p>
           </div>
+
+          <!-- Username: min 6, max 30 -->
           <div class="form-grp">
-            <label class="form-lbl">Username</label>
-            <input type="text" class="form-ctrl" name="username" placeholder="username" required autocomplete="username">
+            <label class="form-lbl">Username <span class="reg-limit-note">6-30 characters</span></label>
+            <input type="text" class="form-ctrl" name="username" id="regUsername"
+              placeholder="username" required autocomplete="username"
+              minlength="6" maxlength="30"
+              oninput="validateRegField(this, 6, 30, 'regUsernameMsg', '6-30 characters required')">
+            <p id="regUsernameMsg" class="reg-hint"></p>
           </div>
+
+          <!-- Email: max 254 (RFC 5321) -->
           <div class="form-grp">
             <label class="form-lbl">Email Address</label>
-            <input type="email" class="form-ctrl" name="email" placeholder="you@gmail.com" required autocomplete="email">
+            <input type="email" class="form-ctrl" name="email"
+              placeholder="you@gmail.com" required autocomplete="email"
+              maxlength="254">
           </div>
+
+          <!-- Phone: exactly 11 digits -->
           <div class="form-grp">
-            <label class="form-lbl">Phone Number</label>
-            <input type="tel" class="form-ctrl" name="phone_number" placeholder="09XXXXXXXXX" required autocomplete="tel">
+            <label class="form-lbl">Phone Number <span class="reg-limit-note">exactly 11 digits</span></label>
+            <input type="tel" class="form-ctrl" name="phone_number" id="regPhone"
+              placeholder="09XXXXXXXXX" required autocomplete="tel"
+              maxlength="11"
+              oninput="validatePhone(this)">
+            <p id="regPhoneMsg" class="reg-hint"></p>
           </div>
+
+          <!-- Address: max 255 -->
           <div class="form-grp">
             <label class="form-lbl">Address</label>
-            <input type="text" class="form-ctrl" name="address" placeholder="Street, City, Province" required>
+            <input type="text" class="form-ctrl" name="address"
+              placeholder="Street, City, Province" required
+              maxlength="255"
+              oninput="validateRegField(this, 1, 255, 'regAddressMsg', 'Max 255 characters')">
+            <p id="regAddressMsg" class="reg-hint"></p>
           </div>
+
+          <!-- Password: min 12, max 72 -->
           <div class="form-grp">
-            <label class="form-lbl">Password</label>
+            <label class="form-lbl">Password <span class="reg-limit-note">12-72 characters</span></label>
             <div style="display:flex;gap:.5rem;align-items:center">
-              <input id="regPasswordInput" type="password" class="form-ctrl" name="password" placeholder="Create a password" required autocomplete="new-password">
+              <input id="regPasswordInput" type="password" class="form-ctrl" name="password"
+                placeholder="Min 12 characters" required autocomplete="new-password"
+                minlength="12" maxlength="72"
+                oninput="validateRegField(this, 12, 72, 'regPasswordMsg', '12-72 characters required');checkRegMatch()">
               <button type="button" class="btn btn-g btn-sm" id="regShowBtn" onclick="toggleRegPassword()">Show</button>
             </div>
+            <p id="regPasswordMsg" class="reg-hint"></p>
           </div>
+
+          <!-- Confirm Password -->
           <div class="form-grp">
             <label class="form-lbl">Confirm Password</label>
             <div style="display:flex;gap:.5rem;align-items:center">
-              <input id="regConfirmInput" type="password" class="form-ctrl" name="confirm_password" placeholder="Repeat password" required autocomplete="new-password" oninput="checkRegMatch()">
+              <input id="regConfirmInput" type="password" class="form-ctrl" name="confirm_password"
+                placeholder="Repeat password" required autocomplete="new-password"
+                minlength="12" maxlength="72"
+                oninput="checkRegMatch()">
               <button type="button" class="btn btn-g btn-sm" id="regConfirmShowBtn" onclick="toggleRegConfirm()">Show</button>
             </div>
-            <p id="regMatchMsg" style="font-size:.68rem;margin-top:.4rem;min-height:.9rem;letter-spacing:.04em"></p>
+            <p id="regMatchMsg" class="reg-hint"></p>
           </div>
+
           <div class="form-grp">
             <div class="g-recaptcha" data-sitekey="{{ config.RECAPTCHA_SITE_KEY }}"></div>
           </div>
+
           <button class="form-submit" type="submit">Create Account</button>
         </form>
-        <p class="auth-alt">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in →</a></p>
+        <p class="auth-alt">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
       </div>
     </div>
   </div>
 </div>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endblock %}
+
 {% block extra_js %}
+<style>
+  .reg-hint { font-size:.68rem; margin-top:.35rem; min-height:.9rem; letter-spacing:.04em; transition:color .2s; }
+  .reg-hint.err { color:#ff6b6b; }
+  .reg-hint.ok  { color:var(--green, #4caf50); }
+  .reg-limit-note { font-size:.62rem; color:var(--text3); font-family:'DM Mono',monospace; letter-spacing:.06em; margin-left:.4rem; font-weight:400; }
+</style>
 <script>
+  function validateRegField(input, min, max, msgId, errText) {
+    const msg = document.getElementById(msgId);
+    if (!msg) return;
+    const len = input.value.length;
+    if (len === 0) { msg.textContent = ''; msg.className = 'reg-hint'; return; }
+    if (len < min || len > max) {
+      msg.textContent = '\u2717 ' + errText;
+      msg.className = 'reg-hint err';
+    } else {
+      msg.textContent = '\u2713 Looks good';
+      msg.className = 'reg-hint ok';
+    }
+  }
+
+  function validatePhone(input) {
+    input.value = input.value.replace(/\D/g, '').slice(0, 11);
+    const msg = document.getElementById('regPhoneMsg');
+    if (!msg) return;
+    const len = input.value.length;
+    if (len === 0) { msg.textContent = ''; msg.className = 'reg-hint'; return; }
+    if (len < 11) {
+      msg.textContent = '\u2717 Must be exactly 11 digits (e.g. 09XXXXXXXXX)';
+      msg.className = 'reg-hint err';
+    } else {
+      msg.textContent = '\u2713 Valid phone number';
+      msg.className = 'reg-hint ok';
+    }
+  }
+
   function toggleRegPassword() {
     const input = document.getElementById('regPasswordInput');
     const btn = document.getElementById('regShowBtn');
@@ -74,6 +152,7 @@
     btn.textContent = isHidden ? 'Hide' : 'Show';
     checkRegMatch();
   }
+
   function toggleRegConfirm() {
     const input = document.getElementById('regConfirmInput');
     const btn = document.getElementById('regConfirmShowBtn');
@@ -81,24 +160,38 @@
     input.type = isHidden ? 'text' : 'password';
     btn.textContent = isHidden ? 'Hide' : 'Show';
   }
+
   function checkRegMatch() {
     const pwd = document.getElementById('regPasswordInput').value;
     const confirm = document.getElementById('regConfirmInput').value;
     const msg = document.getElementById('regMatchMsg');
-    if (!confirm) { msg.textContent = ''; return; }
+    if (!msg) return;
+    if (!confirm) { msg.textContent = ''; msg.className = 'reg-hint'; return; }
     if (pwd === confirm) {
-      msg.textContent = '✓ Passwords match';
-      msg.style.color = 'var(--green)';
+      msg.textContent = '\u2713 Passwords match';
+      msg.className = 'reg-hint ok';
     } else {
-      msg.textContent = '✗ Passwords do not match';
-      msg.style.color = '#ff6b6b';
+      msg.textContent = '\u2717 Passwords do not match';
+      msg.className = 'reg-hint err';
     }
   }
-  // Also check match when typing in password field
-  document.addEventListener('DOMContentLoaded', function() {
+
+  document.addEventListener('DOMContentLoaded', function () {
     const pwdInput = document.getElementById('regPasswordInput');
     if (pwdInput) pwdInput.addEventListener('input', checkRegMatch);
+
+    document.getElementById('regForm').addEventListener('submit', function (e) {
+      const phone = document.getElementById('regPhone').value.replace(/\D/g, '');
+      if (phone.length !== 11) {
+        e.preventDefault();
+        const msg = document.getElementById('regPhoneMsg');
+        if (msg) {
+          msg.textContent = '\u2717 Phone number must be exactly 11 digits';
+          msg.className = 'reg-hint err';
+        }
+        document.getElementById('regPhone').focus();
+      }
+    });
   });
 </script>
-{% endblock %}
 {% endblock %}
